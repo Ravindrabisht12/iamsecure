@@ -1,0 +1,29 @@
+{
+  "name": "iamsecure",
+  "version": "0.1.0",
+  "description": "Scan a codebase for vulnerable dependencies and insecure code, ranked by real-world risk — with an optional AI second opinion.",
+  "type": "module",
+  "bin": {
+    "iamsecure": "bin/iamsecure.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "iamsecure": "node bin/iamsecure.js"
+  },
+  "keywords": [
+    "security",
+    "vulnerability",
+    "audit",
+    "osv",
+    "sca",
+    "sast"
+  ],
+  "license": "MIT"
+}

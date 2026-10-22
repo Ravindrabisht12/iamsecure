@@ -1,0 +1,4 @@
+node_modules/
+.iamsecure/
+iamsecure-report.*
+test/fixtures/*/node_modules/
