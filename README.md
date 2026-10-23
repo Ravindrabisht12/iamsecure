@@ -79,7 +79,8 @@ npm run iamsecure
 | 1. Full dependency tree | Parses `package-lock.json` (v1–v3), `yarn.lock` (classic + berry), `pnpm-lock.yaml` (v5–v9), `composer.lock`, `uv.lock`, `poetry.lock`, `Pipfile.lock`, pinned `requirements*.txt`. It records *why* each package is installed (`next › postcss › nanoid`) and whether it's production or dev-only. |
 | 2. Known vulnerabilities | Batch-queries [OSV.dev](https://osv.dev), which aggregates GitHub Advisories, npm, PyPA, Packagist and others, including `MAL-` **malicious package** reports. Picks the fix version from the range that contains your version. |
 | 3. Your own code | Rules for JS/TS, PHP and Python: command/SQL/template injection, SSRF, path traversal, XSS, open redirect, unsafe deserialization, JWT mistakes, disabled TLS, weak crypto, risky Next.js config, secrets exposed through `NEXT_PUBLIC_*`. It also finds hard-coded secrets and `.env` files that are committed or not gitignored. Lightweight taint tracking tells `exec(userInput)` (critical) apart from `exec("ls")` (not reported). |
-| 4. Validate | Context scoring (below), and optionally AI review of the top findings. |
+| 4. How you use it | Works out the **attack surface**: whether anything listens on the network (`listen()`, `createServer`, Express/Fastify/Koa, MCP HTTP transports, web frameworks) or the app is a local CLI or stdio process. Then it traces the **real import graph** from your source files through `node_modules`, so it knows which vulnerable packages your code ever loads, and the chain that loads them (`lib/api.ts → axios → form-data`). For some packages it also checks whether you use the one feature the bug lives in (e.g. multipart bodies for `form-data`). |
+| 5. Validate | Context scoring (below), and optionally AI review of the top findings. |
 
 ## How "real risk" is calculated
 
@@ -91,7 +92,11 @@ risk = severity × exposure × attack vector × exploit intel × reachability  (
 - **Vulnerability class decides the browser discount.** A ReDoS in browser-only code is ×0.2, because an attacker can only freeze their own tab. SSRF and path traversal in the browser are ×0.25. XSS stays ×0.95. Dev/build-only code is ×0.3. Installed-but-never-imported packages are ×0.5. Malicious packages are always 10, because install scripts run on every machine that installs them.
 - **Attack vector.** Advisories that need local access (CVSS `AV:L`) or high privileges score lower.
 - **Exploit intel.** A CVE in [CISA KEV](https://www.cisa.gov/known-exploited-vulnerabilities-catalog) (exploited in the wild) gets a floor of 9.0. A high [EPSS](https://www.first.org/epss/) exploitation probability boosts the score.
-- **Reachability.** If your code calls a function the advisory names (`_.template`, `jwt.verify`), the risk goes up. If not, it goes down slightly.
+- **Attack surface.** Server-side code in an app with no network listener (a CLI, or an MCP server on stdio) is ranked as a *local process*. Only the person running it can feed it input, so DoS is ×0.35 and auth bypass ×0.4. If a server framework turns out to be loaded at runtime, the app counts as network-facing even when no `listen()` call was found.
+- **Reachability**, strongest evidence first:
+  - **Module.** The package is installed but nothing your code imports ever loads it (an SDK's optional Express transport that you don't use): ×0.3, and the report names the parts of the parent package you *do* import. Needs `node_modules`, so run `npm ci` first. If `node_modules` doesn't match the lockfile, the result is "unknown", not "never loaded".
+  - **Feature.** The package is loaded, but you never use the feature the bug is in (`src/reach/triggers.js`): ×0.5.
+  - **Symbol.** Your code calls a function the advisory names (`_.template`, `jwt.verify`): the risk goes up. If it doesn't, the risk goes down slightly.
 
 Every adjustment adds a plain-English reason that shows in the terminal, the dashboard and SARIF, so the ranking can be explained.
 
@@ -159,6 +164,7 @@ bin/iamsecure.js          CLI
 src/scan.js               orchestrator → report object
 src/deps/                 lockfile parsers, dependency graph, OSV client, CVSS
 src/code/                 file walker, server/browser classification, rules + taint engine, secrets
+src/reach/                attack surface, import-graph tracing through node_modules, feature triggers
 src/risk/                 exploit intel (KEV/EPSS) and the risk model
 src/ai/                   prompt builder and providers (claude-cli, anthropic, openai, ollama)
 src/report/               terminal and SARIF output
@@ -170,6 +176,8 @@ To try it from a clone of this repo, run `node bin/iamsecure.js /path/to/your/pr
 ## Limitations
 
 - Code rules are pattern- and taint-based, not a full data-flow engine. Taint tracking is per file and name-based, so two variables with the same name in different scopes can cause false positives. Use `--ai` to triage them.
-- The reachability check needs the advisory to name the function. Many advisories don't, and in that case the tool says so.
+- Function-level reachability needs the advisory to name the function. Many advisories don't, and in that case the tool says so.
+- Import tracing follows static `import`/`require` and literal `import()`. It doesn't follow computed `require(variable)`, plugin loaders or TS path aliases, so a package loaded only that way can be marked "never loaded". Each such finding shows its chain, or the lack of one, so you can check it.
+- Attack-surface detection is pattern-based. A listener started in an unusual way can be missed. That's why a loaded server framework always overrides "local".
 - Packages are matched against published advisories. A zero-day nobody has reported yet won't show up.
 - Python and PHP import usage isn't mapped to packages yet. Their runtime dependencies are treated as server-side.

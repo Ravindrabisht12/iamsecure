@@ -156,6 +156,13 @@ label.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5
 .showmore { text-align: center; margin: 28px 0 0; }
 
 /* ── fix list: one plain-language card per action ─── */
+.safe { margin: 22px 0 8px; border: 1px solid var(--frame); border-radius: 8px; background: var(--panel); }
+.safe > summary { cursor: pointer; padding: 12px 14px; font-weight: 600; }
+.safe > summary .hint { font-weight: 400; margin-left: 6px; }
+.saferow { display: grid; grid-template-columns: minmax(0, 220px) minmax(0, 1fr); gap: 4px 14px; padding: 10px 14px; border-top: 1px solid var(--frame); font-size: 13px; }
+.saferow .reason { color: var(--text); }
+.saferow .hint { grid-column: 2; margin: 0; }
+@media (max-width: 640px) { .saferow { grid-template-columns: minmax(0, 1fr); } .saferow .hint { grid-column: 1; } }
 .listctl { display: flex; justify-content: flex-end; gap: 16px; margin: 4px 0 6px; }
 .listctl button { background: none; border: 0; padding: 0; cursor: pointer; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
 .card { margin: 8px 0; border-radius: 8px; }
@@ -301,12 +308,13 @@ label.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5
         <button data-v="" class="on">All</button><button data-v="dependency">Dependencies</button><button data-v="code">Code</button><button data-v="secret">Secrets</button>
       </div>
       <select id="exposure" aria-label="Where it runs">
-        <option value="">Runs anywhere</option><option value="server">Server</option><option value="universal">Server + browser</option>
+        <option value="">Runs anywhere</option><option value="server">Server</option><option value="local">Local process</option><option value="universal">Server + browser</option>
         <option value="client">Browser only</option><option value="build">Build/test only</option><option value="unused">Not imported</option>
       </select>
       <label class="chk"><input type="checkbox" id="hideDev"> Hide build/dev-only</label>
       <input type="search" id="q" placeholder="Search package, file, CVE, rule…">
     </div>
+    <p class="hint" id="sorthint"></p>
     <p class="hint" id="hint"></p>
     <div id="list"></div>
   </section>
@@ -338,13 +346,26 @@ const IMPACT = {
 };
 const ACTION = { critical: 'Fix now', high: 'Fix soon', medium: 'Plan a fix', low: 'Low priority', none: 'Info' };
 const WHERE = {
-  server: 'On your server, reachable by attackers over the internet',
+  server: 'On your server',
+  local: 'In a local process (CLI / stdio) with no network listener; only the person running it can send it input',
   universal: "On your server and in visitors' browsers",
   client: "Only in visitors' browsers",
   build: 'Only while building or testing; not shipped to users',
   unused: 'Installed, but your code never imports it',
   unknown: 'Could not tell where this runs',
 };
+function whereText(ctx) {
+  const s = state.report?.reachability?.surface;
+  if ((ctx === 'server' || ctx === 'universal') && s?.kind === 'network') return `${WHERE[ctx]}, and the app accepts connections from the network (${s.evidence[0]})`;
+  return WHERE[ctx];
+}
+const REACH = {
+  loaded: (r) => `Yes: ${r.chain.join(' → ')}${r.where ? `, and your code uses ${r.feature} (${r.where})` : ''}`,
+  'feature-unused': (r) => `It is loaded (${r.chain.join(' → ')}), but your code never uses ${r.feature}, which is where this bug lives`,
+  'not-loaded': () => 'No. It is installed, but nothing your code imports ever loads it',
+  unknown: () => 'Unknown: node_modules does not match the lockfile, so loading could not be traced',
+};
+const reachRow = (f) => (f.reachability ? `<div class="k">Does your code load it?</div><div>${esc(REACH[f.reachability.status](f.reachability))}</div>` : '');
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 const lvl = (f) => (state.sort === 'severity' ? f.severity : f.risk);
 function cmpVer(a, b) {
@@ -358,7 +379,7 @@ function cmpVer(a, b) {
   }
   return 0;
 }
-const EXPO = { server: ['critical', 'Server'], universal: ['critical', 'Server + browser'], client: ['medium', 'Browser only'], build: ['low', 'Build/test'], unused: ['muted', 'Not imported'], unknown: ['muted', 'Unknown'] };
+const EXPO = { server: ['critical', 'Server'], local: ['medium', 'Local process'], universal: ['critical', 'Server + browser'], client: ['medium', 'Browser only'], build: ['low', 'Build/test'], unused: ['muted', 'Not imported'], unknown: ['muted', 'Unknown'] };
 const KIND = { dependency: 'Dependency', code: 'Code', secret: 'Secret' };
 const ICON = {
   dependency: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg>',
@@ -409,6 +430,7 @@ function groupRow(name, list) {
 function header(r) {
   const s = r.summary;
   const p = r.stats.packages;
+  document.title = `${r.project.name} — iamsecure`;
   $('#crumb').innerHTML = `<span>Projects</span><span class="sep">›</span><span>${esc(r.project.name)}</span>`;
   $('#counters').innerHTML = LEVELS.map((l) => `
     <button class="counter ${l} ${s.byRisk[l] ? 'has' : ''} ${state.level === l ? 'on' : ''}" data-level="${l}" title="Show only ${l} (real risk)">
@@ -618,7 +640,8 @@ function pkgCard(g) {
     `${esc(p.name)}@${esc(p.version)}${root ? ` · via ${esc(root)}` : ''}${!p.prod ? ' · dev dependency' : ''}`,
     `<div class="k">What's wrong</div><div>${n === 1 ? 'This version has a known security issue' : `This version has <b>${n} known security issues</b>`}. The worst: “${esc(top.title)}”.</div>
       <div class="k">What could happen</div><div>${esc(IMPACT[top.vulnClass] ?? IMPACT.other)}</div>
-      <div class="k">Where it runs</div><div>${esc(WHERE[ctx])}</div>
+      <div class="k">Where it runs</div><div>${esc(whereText(ctx))}</div>
+      ${reachRow(top)}
       <div class="k">How to fix</div><div>${how}</div>`,
     `Show ${n === 1 ? 'details' : `all ${n} issues and details`}`);
 }
@@ -681,7 +704,7 @@ function singleCard(g) {
     `${esc(f.location.file)} · line ${f.location.line}`,
     `<div class="k">What's wrong</div><div>${wrong}</div>
       <div class="k">What could happen</div><div>${esc(IMPACT[f.vulnClass] ?? IMPACT.other)}</div>
-      <div class="k">Where it runs</div><div>${esc(WHERE[ctx])}</div>
+      <div class="k">Where it runs</div><div>${esc(whereText(ctx))}</div>
       ${f.location.snippet ? `<div class="k">The code</div><div><pre>${esc(f.location.snippet)}</pre></div>` : ''}
       <div class="k">How to fix</div><div>${esc(f.fix)}</div>`,
     'Show details');
@@ -707,14 +730,44 @@ function toggleCard(card, open) {
   btn.textContent = show ? 'Hide details' : btn.dataset.label;
 }
 
+// The single most convincing reason a group is low risk here, strongest evidence first.
+const SAFE_WHY = [/^Never loaded/, /never uses/, /^No network listener/, /^Dev\/build|^In test\/build/, /never imported/, /^Only runs in the browser/, /^AI \(/];
+function safeWhy(g) {
+  const reasons = g.findings[0].reasons ?? [];
+  for (const re of SAFE_WHY) {
+    const hit = reasons.find((r) => re.test(r));
+    if (hit) return hit;
+  }
+  return 'Low risk once adjusted for how this codebase uses it.';
+}
+
+function safeRow(g) {
+  const f = g.findings[0];
+  const target = g.type === 'pkg' ? g.findings.map((x) => x.package.fixedIn).filter(Boolean).sort(cmpVer).at(-1) : null;
+  const subject = g.type === 'pkg' ? `${f.package.name}@${f.package.version}` : `${f.location.file}:${f.location.line}`;
+  const n = g.findings.length;
+  return `<div class="saferow">
+    <div><span class="pill low">${n === 1 ? '1 issue' : `${n} issues`}</span> <code>${esc(subject)}</code></div>
+    <div class="reason">${esc(safeWhy(g))}</div>
+    ${target ? `<p class="hint">Still worth updating to ${esc(target)} when convenient, so scanners stop flagging it.</p>` : ''}
+  </div>`;
+}
+
 function renderFix(list) {
-  const groups = buildGroups(list);
-  state.groupMap = new Map(groups.map((g) => [g.key, g]));
+  const all = buildGroups(list);
+  // Split by REAL risk (even when sorted by raw severity): anything medium or worse needs action.
+  const isSafe = (g) => g.findings.every((f) => f.risk === 'low' || f.risk === 'none');
+  const groups = all.filter((g) => !isSafe(g));
+  const safe = all.filter(isSafe);
+  state.groupMap = new Map(all.map((g) => [g.key, g]));
   const deps = groups.filter((g) => g.type === 'pkg').length;
-  $('#hint').textContent = `${groups.length} things to fix, most urgent first.${deps ? ` Issues in the same package are grouped (${deps} package${deps === 1 ? '' : 's'}), because one update usually fixes all of them.` : ''}`;
-  $('#list').innerHTML = '<div class="listctl"><button type="button" data-all="1">Expand all</button><button type="button" data-all="">Collapse all</button></div>' +
+  $('#hint').textContent = (groups.length ? `${groups.length} thing${groups.length === 1 ? '' : 's'} to fix, most urgent first.` : 'Nothing here needs fixing in this codebase.') +
+    (deps ? ` Issues in the same package are grouped, because one update usually fixes all of them.` : '') +
+    (safe.length ? ` ${safe.length} more ${safe.length === 1 ? 'is' : 'are'} low risk here; see the list at the bottom for why.` : '');
+  $('#list').innerHTML = (groups.length ? '<div class="listctl"><button type="button" data-all="1">Expand all</button><button type="button" data-all="">Collapse all</button></div>' : '') +
     groups.slice(0, state.shown).map((g) => (g.type === 'pkg' ? pkgCard(g) : singleCard(g))).join('') +
-    (groups.length > state.shown ? `<div class="showmore"><button class="btn" id="more">Show ${Math.min(PAGE, groups.length - state.shown)} more of ${groups.length - state.shown}</button></div>` : '');
+    (groups.length > state.shown ? `<div class="showmore"><button class="btn" id="more">Show ${Math.min(PAGE, groups.length - state.shown)} more of ${groups.length - state.shown}</button></div>` : '') +
+    (safe.length ? `<details class="safe"><summary>Low risk in this codebase (${safe.length})<span class="hint">why each one isn't a real threat here</span></summary>${safe.map(safeRow).join('')}</details>` : '');
   $('#more')?.addEventListener('click', () => { state.shown += PAGE; render(); });
   document.querySelectorAll('.card').forEach((c) => {
     c.querySelector('.fbar').onclick = () => openCard(c);
@@ -729,9 +782,10 @@ function renderFix(list) {
 function render() {
   const r = state.report;
   header(r);
-  $('#hint').textContent = state.sort === 'risk'
-    ? 'Worst first: severity adjusted for where the code runs, whether your code reaches it, and whether it is exploited in the wild.'
-    : 'High → low: the raw CVSS score of each advisory or the rule severity, ignoring how your app uses it.';
+  $('#sorthint').textContent = state.sort === 'risk'
+    ? 'Worst first ranks by real risk in this codebase: where the code runs, whether your code loads it, and whether it is exploited in the wild. High → low shows the raw CVSS severity instead (what npm audit shows).'
+    : 'High → low ranks by raw CVSS severity, ignoring how your app uses it (what npm audit shows). Worst first ranks by real risk in this codebase instead.';
+  $('#hint').textContent = '';
   const list = filtered();
   if (!list.length) {
     $('#list').innerHTML = `<div class="empty">${r.findings.length ? 'No findings match these filters.' : '✓ No known vulnerabilities or insecure code patterns found.'}</div>`;

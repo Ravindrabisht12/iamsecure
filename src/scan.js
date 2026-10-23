@@ -6,8 +6,10 @@ import { scanCode } from "./code/engine.js";
 import { scanSecrets } from "./code/secrets.js";
 import { loadExploitData } from "./risk/exploit.js";
 import { scoreFindings } from "./risk/score.js";
+import { detectSurface, confirmSurface } from "./reach/surface.js";
+import { walkModules } from "./reach/modules.js";
 
-export const VERSION = "0.1.2";
+export const VERSION = "0.1.4";
 
 /**
  * Run a full scan and return a JSON-serialisable report.
@@ -36,11 +38,26 @@ export async function scan(root, opts = {}) {
   }
 
   let src = null;
+  let surface = null;
+  let modules = null;
   if (code) {
     log("Analysing source code…");
     src = analyzeSource(project);
     stats.files = src.contexts.size;
     findings.push(...scanCode(src), ...scanSecrets(src, project.root));
+    surface = detectSurface(project, src);
+
+    if (graphs.some((g) => g.ecosystem === "npm" && g.packages().length)) {
+      log("Tracing which packages your code actually loads…");
+      const entries = src.files.filter((f) => f.kind === "code" && f.context && f.context !== "build");
+      modules = walkModules(project.root, entries);
+      if (!modules.available) {
+        warnings.push("node_modules not found — install dependencies (e.g. `npm ci`) so iamsecure can tell which vulnerable packages your code actually loads.");
+      } else if (modules.truncated) {
+        warnings.push(`Stopped tracing after ${modules.modules} modules; packages not reached by then are not marked as unused.`);
+      }
+      surface = confirmSurface(surface, modules);
+    }
   }
 
   let exploitData;
@@ -51,13 +68,17 @@ export async function scan(root, opts = {}) {
     warnings.push(...exploitData.warnings);
   }
 
-  scoreFindings(findings, { src, framework: project.framework, exploit: exploitData });
+  scoreFindings(findings, { src, framework: project.framework, exploit: exploitData, surface, modules });
 
   return {
     tool: { name: "iamsecure", version: VERSION },
     scannedAt: new Date().toISOString(),
     durationMs: Date.now() - started,
     project: { name: project.name, root: project.root, framework: project.framework },
+    reachability: {
+      surface: surface ?? { kind: "unknown", evidence: [] },
+      modules: modules?.available ? { traced: modules.modules, packagesLoaded: modules.loaded.size, truncated: modules.truncated } : null,
+    },
     sourceFiles: src ? [...src.contexts].slice(0, 400).map(([file, context]) => ({ file, context })) : [],
     stats,
     warnings,

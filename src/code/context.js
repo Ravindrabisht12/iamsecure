@@ -7,6 +7,7 @@ const BUILTINS = new Set(builtinModules.flatMap((m) => [m, `node:${m}`]));
 
 export const CONTEXT_LABEL = {
   server: 'runs on server',
+  local: 'local process, no network listener',
   client: 'browser only',
   universal: 'server + browser',
   build: 'build/test only',
@@ -91,7 +92,7 @@ export function extractImports(text) {
       m[0].match(/^import\s+(?:type\s+)?(?:\*\s+as\s+)?([\w$]+)[\s,]/)?.[1] ??
       before.match(/(?:const|let|var)\s+([\w$]+)\s*=\s*require\s*\(\s*['"][^'"]+['"]$/)?.[1] ??
       null;
-    out.push({ pkg, line, binding });
+    out.push({ pkg, spec: m[1], line, binding });
   }
   return out;
 }

@@ -41,7 +41,7 @@ export function toSarif(report) {
       message: { text: [text, ...(f.reasons ?? []).map((r) => `• ${r}`)].join('\n') },
       locations: [{ physicalLocation: { artifactLocation: { uri: where.uri }, region: { startLine: where.line } } }],
       partialFingerprints: { iamsecure: f.id },
-      properties: { riskScore: f.riskScore, severityScore: f.severityScore, exposure: f.exposure?.context, aiVerdict: f.ai?.verdict },
+      properties: { riskScore: f.riskScore, severityScore: f.severityScore, exposure: f.exposure?.context, reachability: f.reachability?.status, aiVerdict: f.ai?.verdict },
     });
   }
 

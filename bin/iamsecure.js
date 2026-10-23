@@ -121,13 +121,18 @@ try {
     }
   }
   if (values.ui) {
-    const { url } = await serveDashboard(report, {
+    const { url, replaced } = await serveDashboard(report, {
       port: Number(values.port),
       open: !values['no-open'],
       rescan: runScan,
       aiProvider: values.ai ?? null,
       analyze: values.ai ? makeAnalyzer({ provider: values.ai, model: values['ai-model'] }) : undefined,
     });
+    if (replaced) console.log(c.dim(`\nStopped the previous dashboard (${replaced.root}) and took over port ${replaced.port}.`));
+    const port = Number(new URL(url).port);
+    if (port !== Number(values.port)) {
+      console.log(c.yellow(`\n⚠ Port ${values.port} is busy by another app, using ${port}.`));
+    }
     console.log(`\n${c.bold('Dashboard:')} ${c.cyan(url)}  ${c.dim('(Ctrl+C to stop)')}`);
   }
 } catch (err) {
