@@ -5,7 +5,7 @@ Find vulnerable dependencies and insecure code in your project, then rank them i
 - **Real risk (worst first)** is the default. It shows how dangerous each issue is for *this* codebase.
 - **Severity (high → low)** is the raw CVSS / rule severity, the same thing `npm audit` shows.
 
-The two rankings differ a lot in practice. On a vulnerable Next.js test app, 51 issues are "high" by severity but only 27 are high by real risk. A 9.8 CVE in a dev-only CLI tool drops to *low*. An 8.1 lodash advisory rises to *critical* because your API route calls the exact `_.template` function the advisory names.
+The two rankings differ a lot in practice. On a deliberately vulnerable Next.js app, 51 issues are "high" by severity but only 27 are high by real risk. A 9.8 CVE in a dev-only CLI tool drops to *low*. An 8.1 lodash advisory rises to *critical* because your API route calls the exact `_.template` function the advisory names.
 
 It has **zero runtime dependencies** and needs only Node ≥ 18. A security scanner shouldn't add 300 packages to your supply chain.
 
@@ -115,11 +115,10 @@ src/code/                 file walker, server/browser classification, rules + ta
 src/risk/                 exploit intel (KEV/EPSS) and the risk model
 src/ai/                   prompt builder and providers (claude-cli, anthropic, openai, ollama)
 src/report/               terminal and SARIF output
-src/ui/                   localhost dashboard (single HTML file, no CDN)
-test/                     node:test suite + vulnerable fixture apps (Next.js, PHP, Python)
+src/ui/                   localhost dashboard: fix list, all findings, dependency tree (single HTML file, no CDN)
 ```
 
-Run `npm test` for the unit tests. To see a full report, run `node bin/iamsecure.js test/fixtures/next-app --ui`.
+To try it from a clone of this repo, run `node bin/iamsecure.js /path/to/your/project --ui`.
 
 ## Limitations
 

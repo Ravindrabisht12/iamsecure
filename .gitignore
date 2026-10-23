@@ -1,4 +1,5 @@
 node_modules/
 .iamsecure/
 iamsecure-report.*
-test/fixtures/*/node_modules/
+Screenshot*.png
+iamsecure.sarif

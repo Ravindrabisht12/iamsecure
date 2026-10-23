@@ -50,7 +50,7 @@ export function toSarif(report) {
     version: '2.1.0',
     runs: [
       {
-        tool: { driver: { name: 'iamsecure', version: report.tool.version, informationUri: 'https://www.npmjs.com/package/iamsecure', rules: [...rules.values()] } },
+        tool: { driver: { name: 'iamsecure', version: report.tool.version, informationUri: 'https://github.com/Ravindrabisht12/iamsecure', rules: [...rules.values()] } },
         results,
       },
     ],

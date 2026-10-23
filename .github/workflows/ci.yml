@@ -1,0 +1,15 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  self-scan:
+    runs-on: ubuntu-latest
+    permissions: { security-events: write, contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node bin/iamsecure.js . --sarif --limit 10
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with: { sarif_file: iamsecure.sarif }

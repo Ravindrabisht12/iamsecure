@@ -4,142 +4,304 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>iamsecure report</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%233b82f6' d='M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23143d59' d='M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z'/%3E%3C/svg%3E">
 <style>
 :root {
-  --bg: #f6f7f9; --panel: #ffffff; --panel-2: #f1f3f6; --text: #14171c; --muted: #5d6673; --border: #e2e5ea;
-  --accent: #2f6fde; --accent-text: #ffffff;
-  --crit: #b4232a; --crit-bg: #fde8e8; --high: #c2410c; --high-bg: #fdeee3; --med: #a16207; --med-bg: #fdf5d8;
-  --low: #2563eb; --low-bg: #e6eefc; --ok: #15803d; --ok-bg: #e3f5e9; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08);
+  --bg: #ffffff; --strip: #0f2b3d; --text: #142b3b; --muted: #5b6b78; --faint: #8795a1;
+  --panel: #f6f7f8; --frame: #e3e7eb; --tile: #ffffff; --line: #d8dde2; --link: #142b3b;
+  --accent: #1f6feb; --zero: #c3c9cf;
+  --crit: #d93a2b; --high: #ea7317; --med: #f2b705; --low: #2f7fd8; --ok: #12a03b;
+  --chip-bg: #eef1f4; --code-bg: #f1f3f5; --shadow: 0 1px 2px rgba(15, 43, 61, .06);
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1116; --panel: #161b22; --panel-2: #1c222b; --text: #e6e9ee; --muted: #9aa4b2; --border: #2a313c;
-    --accent: #5b8def; --crit: #ff7b7b; --crit-bg: #3a1618; --high: #ffa366; --high-bg: #3a2414; --med: #f2c94c; --med-bg: #352c10;
-    --low: #7aa7ff; --low-bg: #162440; --ok: #5fd38a; --ok-bg: #12301f; --shadow: none;
+    --bg: #0f1418; --strip: #05090c; --text: #e4e9ee; --muted: #a2afba; --faint: #7d8a95;
+    --panel: #172027; --frame: #212c35; --tile: #1b252d; --line: #2a3640; --link: #e4e9ee;
+    --accent: #6aa5ff; --zero: #46535e; --chip-bg: #212c35; --code-bg: #121a20; --shadow: none;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1116; --panel: #161b22; --panel-2: #1c222b; --text: #e6e9ee; --muted: #9aa4b2; --border: #2a313c;
-  --accent: #5b8def; --crit: #ff7b7b; --crit-bg: #3a1618; --high: #ffa366; --high-bg: #3a2414; --med: #f2c94c; --med-bg: #352c10;
-  --low: #7aa7ff; --low-bg: #162440; --ok: #5fd38a; --ok-bg: #12301f; --shadow: none;
+  --bg: #0f1418; --strip: #05090c; --text: #e4e9ee; --muted: #a2afba; --faint: #7d8a95;
+  --panel: #172027; --frame: #212c35; --tile: #1b252d; --line: #2a3640; --link: #e4e9ee;
+  --accent: #6aa5ff; --zero: #46535e; --chip-bg: #212c35; --code-bg: #121a20; --shadow: none;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 "Avenir Next", Avenir, "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+a { color: var(--link); }
 button, select, input { font: inherit; color: inherit; }
-a { color: var(--accent); }
-code, pre, .mono { font-family: var(--mono); font-size: 12.5px; }
-header.top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 16px; padding: 12px 24px; background: var(--panel); border-bottom: 1px solid var(--border); }
-.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 16px; }
-.brand svg { width: 22px; height: 22px; }
-.proj { color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.proj b { color: var(--text); }
-.btn { border: 1px solid var(--border); background: var(--panel); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
-.btn:hover { background: var(--panel-2); }
-.btn.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-.btn:disabled { opacity: .6; cursor: progress; }
-main { max-width: 1180px; margin: 0 auto; padding: 24px; }
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
-.card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; box-shadow: var(--shadow); cursor: pointer; }
-.card.on { outline: 2px solid var(--accent); }
-.card .n { font-size: 30px; font-weight: 700; line-height: 1.1; }
-.card .l { text-transform: uppercase; letter-spacing: .06em; font-size: 11px; font-weight: 700; }
-.card .s { color: var(--muted); font-size: 12px; margin-top: 4px; }
-.card.critical .n, .card.critical .l { color: var(--crit); }
-.card.high .n, .card.high .l { color: var(--high); }
-.card.medium .n, .card.medium .l { color: var(--med); }
-.card.low .n, .card.low .l { color: var(--low); }
-.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 14px 2px 0; color: var(--muted); font-size: 13px; }
-.meta b { color: var(--text); }
-.warn { margin-top: 12px; padding: 10px 14px; border-radius: 10px; background: var(--med-bg); color: var(--text); border: 1px solid var(--border); font-size: 13px; }
-.tabs { display: flex; gap: 4px; margin: 22px 0 12px; border-bottom: 1px solid var(--border); }
-.tabs button { background: none; border: 0; padding: 8px 14px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.tabs button.on { color: var(--text); border-color: var(--accent); font-weight: 600; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
-.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--panel); }
-.seg button { border: 0; background: none; padding: 6px 11px; cursor: pointer; color: var(--muted); }
-.seg button + button { border-left: 1px solid var(--border); }
-.seg button.on { background: var(--accent); color: var(--accent-text); }
-select, input[type=search] { border: 1px solid var(--border); background: var(--panel); border-radius: 8px; padding: 6px 10px; }
-input[type=search] { flex: 1; min-width: 180px; }
-label.chk { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
-.hint { color: var(--muted); font-size: 12.5px; margin: -4px 0 10px; }
-details.f { background: var(--panel); border: 1px solid var(--border); border-left-width: 4px; border-radius: 10px; margin-bottom: 8px; box-shadow: var(--shadow); }
-details.f.critical { border-left-color: var(--crit); }
-details.f.high { border-left-color: var(--high); }
-details.f.medium { border-left-color: var(--med); }
-details.f.low, details.f.none { border-left-color: var(--low); }
-details.f > summary { list-style: none; cursor: pointer; padding: 10px 14px; display: grid; grid-template-columns: 88px 92px 1fr; gap: 10px; align-items: start; }
-details.f > summary::-webkit-details-marker { display: none; }
-.badge { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .05em; padding: 2px 8px; border-radius: 999px; text-align: center; }
-.badge.critical { color: var(--crit); background: var(--crit-bg); }
-.badge.high { color: var(--high); background: var(--high-bg); }
-.badge.medium { color: var(--med); background: var(--med-bg); }
-.badge.low, .badge.none { color: var(--low); background: var(--low-bg); }
-.scores { font-size: 12px; color: var(--muted); white-space: nowrap; }
-.scores b { color: var(--text); font-size: 15px; }
-.ttl { min-width: 0; }
-.ttl .name { font-weight: 600; word-break: break-word; }
-.ttl .desc { color: var(--text); }
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
-.chip { font-size: 11.5px; padding: 1px 8px; border-radius: 999px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); }
-.chip.fix { color: var(--ok); background: var(--ok-bg); border-color: transparent; }
-.chip.danger { color: var(--crit); background: var(--crit-bg); border-color: transparent; font-weight: 600; }
-.chip.ai { color: var(--accent); }
-.fbody { padding: 4px 16px 16px 112px; display: grid; gap: 12px; }
-.fbody h4 { margin: 0 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
-.fbody ul { margin: 0; padding-left: 18px; }
-.path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
-.path span { font-family: var(--mono); font-size: 12px; padding: 1px 6px; border-radius: 6px; background: var(--panel-2); }
-.path span:last-child { background: var(--crit-bg); color: var(--crit); }
-pre { margin: 0; padding: 10px 12px; background: var(--panel-2); border-radius: 8px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; max-height: 320px; overflow-y: auto; }
-.ai-box { border: 1px dashed var(--border); border-radius: 10px; padding: 10px 12px; }
-.ai-box .v { font-weight: 700; }
-.v.exploitable { color: var(--crit); } .v.likely { color: var(--high); } .v.unlikely { color: var(--low); } .v.not_exploitable { color: var(--ok); }
-.empty { padding: 40px; text-align: center; color: var(--muted); background: var(--panel); border-radius: 12px; border: 1px solid var(--border); }
-.tree ul { list-style: none; margin: 0; padding-left: 18px; border-left: 1px dashed var(--border); }
-.tree > ul { border: 0; padding: 0; }
-.tree li { margin: 3px 0; }
-.tree summary { cursor: pointer; }
-.node { font-family: var(--mono); font-size: 12.5px; }
-.node.vuln { font-weight: 700; }
-.count { margin-left: 6px; }
-@media (max-width: 760px) {
-  header.top { padding: 10px 16px; flex-wrap: wrap; }
-  main { padding: 16px; }
-  .cards { grid-template-columns: repeat(2, 1fr); }
-  details.f > summary { grid-template-columns: 1fr; gap: 4px; }
-  .fbody { padding: 4px 14px 14px; }
+pre { white-space: pre-wrap; overflow-wrap: anywhere; max-width: 100%; }
+code, pre, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; }
+
+/* ── header ─────────────────────────────────────────── */
+.strip { height: 6px; background: var(--strip); }
+header.top { border-bottom: 1px solid var(--line); }
+.top-in { max-width: 1000px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 24px; }
+.brand { display: flex; align-items: center; gap: 9px; font-size: 19px; letter-spacing: -.01em; }
+.brand b { font-weight: 800; }
+.brand svg { width: 26px; height: 26px; }
+.nav { margin-left: auto; display: flex; gap: 26px; }
+.nav button { background: none; border: 0; padding: 4px 0; cursor: pointer; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text); }
+.nav button:hover { color: var(--accent); }
+.nav button:disabled { opacity: .55; cursor: progress; }
+
+main { max-width: 1000px; margin: 0 auto; padding: 0 24px 64px; }
+
+/* ── breadcrumb + counter tiles ─────────────────────── */
+.hero { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.crumb { padding-top: 46px; font-size: 14px; color: var(--muted); }
+.crumb a { color: var(--text); }
+.crumb .sep { margin: 0 8px; }
+.counters { display: flex; gap: 8px; padding: 8px; background: var(--frame); border-radius: 0 0 6px 6px; }
+.counter { width: 84px; padding: 10px 4px 8px; background: var(--tile); text-align: center; border: 0; cursor: pointer; border-radius: 3px; }
+.counter .n { width: 38px; height: 38px; margin: 0 auto 4px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 15px; color: #fff; background: var(--zero); }
+.counter .l { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.counter.critical.has .n { background: var(--crit); }
+.counter.high.has .n { background: var(--high); }
+.counter.medium.has .n { background: var(--med); color: #2b2100; }
+.counter.low.has .n { background: var(--low); }
+.counter.on { outline: 2px solid var(--accent); outline-offset: -2px; }
+
+h1 { display: flex; align-items: center; gap: 10px; margin: 26px 0 0; font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
+h1 svg { width: 26px; height: 26px; flex: none; }
+.sub { color: var(--muted); font-size: 14px; margin: 2px 0 0 36px; overflow-wrap: anywhere; }
+.prose, .desc, .firstfix li, h1 span { overflow-wrap: anywhere; min-width: 0; }
+.label { margin: 28px 0 10px; font-size: 14px; color: var(--muted); }
+
+/* ── status dots (like Up / Affected / Down) ────────── */
+.dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; position: relative; vertical-align: -2px; flex: none; }
+.dot.critical { background: var(--crit); }
+.dot.critical::after { content: ""; position: absolute; left: 3px; right: 3px; top: 6px; height: 2px; border-radius: 1px; background: #fff; }
+.dot.high { background: var(--high); }
+.dot.medium { background: var(--med); }
+.dot.medium::after { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: #2b2100; }
+.dot.low { background: var(--low); }
+.dot.ok { background: var(--ok); }
+.dot.muted, .dot.none { background: var(--zero); }
+.trio { display: flex; gap: 30px; margin-top: 10px; font-size: 14px; }
+.trio > div { min-width: 0; }
+.trio small { display: block; font-size: 13.5px; color: var(--text); }
+.trio .v { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
+
+/* ── latest scan panel ─────────────────────────────── */
+.panel { background: var(--panel); border-radius: 10px; padding: 28px 32px 30px; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 28px 40px; }
+.status { display: flex; align-items: baseline; gap: 12px; font-size: 16px; }
+.status .ico { width: 18px; text-align: center; }
+.status b { font-weight: 700; }
+.status .kind { font-weight: 600; letter-spacing: .02em; }
+.when { margin-left: 30px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.panel .trio { margin-left: 30px; }
+.panel .rawsev { margin: 12px 0 0 30px; font-size: 13px; color: var(--muted); }
+.prose p { margin: 0 0 14px; }
+.groups { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 10px; }
+.groups li { display: flex; align-items: center; gap: 14px; font-weight: 600; }
+.groups li span.d { font-weight: 400; color: var(--muted); }
+.firstfix { margin: 18px 0 0; padding: 0; list-style: none; font-size: 14px; }
+.firstfix li { margin: 4px 0; }
+.firstfix a { cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.firstfix a:hover { color: var(--accent); }
+.warn { margin: 14px 0 0; padding: 10px 14px; border-left: 3px solid var(--med); background: var(--panel); font-size: 14px; }
+
+/* ── toolbar ───────────────────────────────────────── */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 36px 0 6px; }
+.bar .label { margin: 0; }
+.tabs { display: flex; gap: 22px; margin-right: auto; }
+.tabs button { background: none; border: 0; padding: 4px 0; cursor: pointer; color: var(--muted); font-size: 14px; border-bottom: 2px solid transparent; }
+.tabs button.on { color: var(--text); border-color: var(--text); font-weight: 600; }
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 4px 0 4px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { border: 0; background: none; padding: 5px 13px; cursor: pointer; color: var(--muted); font-size: 13.5px; }
+.seg button.on { background: var(--text); color: var(--bg); }
+select, input[type=search] { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 5px 13px; font-size: 13.5px; }
+input[type=search] { flex: 1; min-width: 200px; }
+label.chk { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; color: var(--muted); }
+.hint { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+
+/* ── findings, like a notification history ─────────── */
+.entry { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 12px 40px; padding: 28px 0; border-bottom: 1px solid var(--line); }
+.entry .head { display: flex; align-items: baseline; gap: 12px; }
+.entry .head .ico { width: 18px; flex: none; color: var(--muted); }
+.entry .head .ico svg { width: 18px; height: 18px; vertical-align: -3px; }
+.entry .lvl { font-weight: 700; letter-spacing: .02em; text-transform: uppercase; font-size: 14px; }
+.entry .lvl.critical { color: var(--crit); } .entry .lvl.high { color: var(--high); }
+.entry .lvl.medium { color: #b38600; } .entry .lvl.low { color: var(--low); }
+:root[data-theme="dark"] .entry .lvl.medium { color: var(--med); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .entry .lvl.medium { color: var(--med); } }
+.entry .kind { font-weight: 600; font-size: 15px; }
+.entry .subject { margin: 2px 0 0 30px; font-weight: 600; font-size: 14px; color: var(--muted); word-break: break-all; }
+.entry .trio { margin-left: 30px; gap: 26px; }
+.entry .tags { margin: 10px 0 0 30px; display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 12px; padding: 1px 9px; border-radius: 999px; background: var(--chip-bg); color: var(--muted); }
+.tag.red { background: var(--crit); color: #fff; font-weight: 600; }
+.tag.fix { background: transparent; color: var(--ok); border: 1px solid var(--ok); }
+.desc .ttl { margin: 0 0 8px; font-weight: 600; }
+.desc ul { margin: 0 0 10px; padding-left: 18px; }
+.desc li { margin: 2px 0; }
+.desc .fix { margin: 0 0 6px; }
+.desc .fix b { color: var(--ok); }
+.desc pre { margin: 0 0 10px; padding: 10px 12px; background: var(--code-bg); border-radius: 6px; white-space: pre-wrap; word-break: break-word; max-height: 320px; overflow: auto; }
+.readall { display: inline-block; margin-top: 2px; font-size: 14px; color: var(--text); cursor: pointer; background: none; border: 0; padding: 0; }
+.readall span { text-decoration: underline; }
+.more { margin-top: 14px; display: grid; gap: 14px; }
+.more h4 { margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.path { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
+.path code { padding: 1px 7px; border-radius: 5px; background: var(--chip-bg); }
+.path code:last-child { background: var(--crit); color: #fff; }
+.ai { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; }
+.ai .v { font-weight: 700; text-transform: capitalize; }
+.btn { border: 1px solid var(--text); background: none; border-radius: 999px; padding: 6px 16px; cursor: pointer; font-size: 13.5px; font-weight: 600; }
+.btn:hover { background: var(--text); color: var(--bg); }
+.btn:disabled { opacity: .55; cursor: progress; }
+.empty { padding: 48px 0; color: var(--muted); text-align: center; }
+.showmore { text-align: center; margin: 28px 0 0; }
+
+/* ── fix list: one plain-language card per action ─── */
+.listctl { display: flex; justify-content: flex-end; gap: 16px; margin: 4px 0 6px; }
+.listctl button { background: none; border: 0; padding: 0; cursor: pointer; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 2px; }
+.card { margin: 8px 0; border-radius: 8px; }
+.fbar { width: 100%; display: grid; grid-template-columns: 150px minmax(0, 1fr) auto 14px; gap: 16px; align-items: center; padding: 13px 18px; border: 0; border-radius: 8px; cursor: pointer; text-align: left; color: #fff; background: var(--zero); font-size: 15px; }
+.fbar:hover { filter: brightness(1.06); }
+.fbar:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.fbar.critical { background: var(--crit); }
+.fbar.high { background: var(--high); }
+.fbar.medium { background: var(--med); color: #2b2100; }
+.fbar.low { background: var(--low); }
+.bar-lvl { font-weight: 800; font-size: 13px; letter-spacing: .03em; white-space: nowrap; }
+.bar-title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-meta { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; opacity: .92; white-space: nowrap; max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+.chev { display: inline-block; font-size: 20px; line-height: 1; transition: transform .15s; }
+.card.open .chev { transform: rotate(90deg); }
+.card.open .fbar { border-radius: 8px 8px 0 0; }
+.body { border: 1px solid var(--line); border-top: 0; border-radius: 0 0 8px 8px; padding: 18px 22px 20px; background: var(--bg); }
+.card .pills { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pill { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .02em; padding: 2px 10px; border-radius: 999px; color: #fff; background: var(--zero); white-space: nowrap; }
+.pill.critical { background: var(--crit); } .pill.high { background: var(--high); }
+.pill.medium { background: var(--med); color: #2b2100; } .pill.low { background: var(--low); }
+.card h3 { margin: 10px 0 2px; font-size: 18px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; }
+.card .loc { color: var(--muted); font-size: 13.5px; overflow-wrap: anywhere; }
+.rows { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px 18px; margin-top: 16px; font-size: 14.5px; }
+.rows .k { color: var(--muted); font-weight: 600; }
+.rows > div { min-width: 0; }
+.rows pre { margin: 0; padding: 10px 12px; background: var(--code-bg); border-radius: 6px; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; max-width: 100%; }
+.rows code { background: var(--chip-bg); padding: 1px 6px; border-radius: 4px; overflow-wrap: anywhere; }
+.toggle { margin-top: 14px; background: none; border: 0; padding: 0; cursor: pointer; font-size: 14px; font-weight: 600; color: var(--accent); }
+.details { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line); display: grid; gap: 14px; }
+.details[hidden], .more[hidden] { display: none; }
+.details h4 { margin: 0 0 4px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.details ul { margin: 0; padding-left: 18px; }
+.advs { width: 100%; border-collapse: collapse; font-size: 14px; }
+.advs td { padding: 9px 8px 9px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.advs .nowrap { white-space: nowrap; color: var(--muted); }
+.advs td:last-child { white-space: nowrap; }
+@media (max-width: 820px) {
+  .fbar { grid-template-columns: minmax(0, 1fr) 14px; gap: 2px 10px; padding: 11px 14px; }
+  .bar-lvl { grid-column: 1; }
+  .bar-title { grid-column: 1; white-space: normal; }
+  .bar-meta { display: none; }
+  .chev { grid-column: 2; grid-row: 1 / span 2; }
+  .body { padding: 14px 16px 16px; }
+  .rows { grid-template-columns: 1fr; gap: 2px; }
+  .rows .k { margin-top: 10px; }
+  .advs td:nth-child(3) { display: none; }
+}
+
+/* ── dependency tree ───────────────────────────────── */
+.tv-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 6px 0 4px; }
+.tv-head input[type=search] { flex: 1; min-width: 240px; }
+.tv-sum { margin: 14px 0 6px; font-size: 14.5px; }
+.tv-sum b { font-weight: 700; }
+.tv-file { margin: 22px 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.tv, .tv ul { list-style: none; margin: 0; padding: 0; }
+.tv-root { margin: 8px 0; border: 1px solid var(--line); border-left: 6px solid var(--ok); border-radius: 8px; background: var(--bg); }
+.tv-root.critical { border-left-color: var(--crit); } .tv-root.high { border-left-color: var(--high); }
+.tv-root.medium { border-left-color: var(--med); } .tv-root.low { border-left-color: var(--low); }
+.tv-root > .tv-node { padding: 12px 16px; font-size: 15px; }
+.tv-root > ul { padding: 0 16px 14px 30px; }
+.tv ul ul { padding-left: 26px; }
+.tv ul li { position: relative; }
+.tv ul li::before { content: ""; position: absolute; left: -14px; top: 0; bottom: 0; border-left: 1px solid var(--line); }
+.tv ul li:last-child::before { bottom: auto; height: 17px; }
+.tv ul li::after { content: ""; position: absolute; left: -14px; top: 17px; width: 11px; border-top: 1px solid var(--line); }
+.tv-node { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; padding: 5px 0; min-height: 34px; }
+.tv-tog { width: 20px; height: 20px; flex: none; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); cursor: pointer; font-size: 13px; line-height: 1; color: var(--muted); padding: 0; transition: transform .12s; }
+.tv-tog[aria-expanded="true"] { transform: rotate(90deg); }
+.tv-leaf { width: 20px; flex: none; }
+.tv-name { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.tv-ver { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13px; color: var(--muted); margin-left: -8px; }
+.tv-node.clean .tv-name { font-weight: 400; }
+.tv-below { font-size: 12.5px; color: var(--muted); }
+.tv-fix { font-size: 13px; color: var(--accent); cursor: pointer; }
+.tv-more { font-size: 13px; color: var(--muted); padding: 4px 0 4px 29px; }
+.why { margin: 10px 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; }
+.why .tv-node { padding: 0 0 6px; }
+.why ol { margin: 4px 0 0; padding-left: 22px; font-size: 13.5px; }
+.why li { margin: 4px 0; }
+.chain { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.chain code { padding: 1px 7px; border-radius: 5px; background: var(--chip-bg); }
+.chain code:last-child { background: var(--text); color: var(--bg); }
+
+@media (max-width: 820px) {
+  .top-in { padding: 12px 16px; gap: 12px; }
+  .nav { gap: 14px; }
+  .nav button { font-size: 11.5px; letter-spacing: .04em; }
+  .nav .long { display: none; }
+  h1 { font-size: 22px; align-items: flex-start; }
+  h1 svg { margin-top: 3px; }
+  .sub { margin-left: 0; }
+  .counter { padding: 8px 2px 6px; }
+  .counter .l { font-size: 10px; letter-spacing: .03em; }
+  main { padding: 0 16px 48px; }
+  .hero { flex-direction: column-reverse; gap: 0; }
+  .crumb { padding-top: 18px; }
+  .counters { width: 100%; justify-content: space-between; border-radius: 0 0 6px 6px; }
+  .counter { flex: 1; width: auto; }
+  .panel, .entry { grid-template-columns: 1fr; }
+  .panel { padding: 22px 18px; }
+  .trio { gap: 18px; flex-wrap: wrap; }
 }
 </style>
 </head>
 <body>
+<div class="strip"></div>
 <header class="top">
-  <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="var(--accent)" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z"/><path fill="none" stroke="#fff" stroke-width="2" d="m8.5 12 2.5 2.5 4.5-5"/></svg>iamsecure</div>
-  <div class="proj" id="proj">Loading…</div>
-  <button class="btn" id="rescan" title="Run the scan again">Rescan</button>
-  <button class="btn" id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
+  <div class="top-in">
+    <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z"/><path fill="none" stroke="var(--bg)" stroke-width="2.2" d="m8.5 12 2.5 2.5 4.5-5"/></svg><span><b>iam</b>secure</span></div>
+    <nav class="nav">
+      <button id="rescan">Rescan</button>
+      <button id="download"><span class="long">Download </span>JSON</button>
+      <button id="theme" aria-label="Toggle theme">Theme</button>
+    </nav>
+  </div>
 </header>
 <main>
-  <section class="cards" id="cards"></section>
-  <div class="meta" id="meta"></div>
+  <div class="hero">
+    <div class="crumb" id="crumb"><span>Projects</span><span class="sep">›</span><span>…</span></div>
+    <div class="counters" id="counters" aria-label="Findings by real risk"></div>
+  </div>
+  <h1 id="title"></h1>
+  <div class="sub" id="sub"></div>
+
+  <div class="label">Latest scan:</div>
+  <section class="panel" id="latest"></section>
   <div id="warnings"></div>
-  <nav class="tabs" role="tablist">
-    <button class="on" data-tab="findings">Findings</button>
-    <button data-tab="tree">Dependency tree</button>
-  </nav>
+
+  <div class="bar">
+    <div class="tabs" role="tablist">
+      <button class="on" data-tab="fix">Fix list</button>
+      <button data-tab="all">All findings</button>
+      <button data-tab="tree">Dependency tree</button>
+    </div>
+  </div>
   <section id="tab-findings">
-    <div class="toolbar">
+    <div class="filters">
       <div class="seg" id="sort" role="group" aria-label="Sort">
-        <button data-v="risk" class="on" title="Severity adjusted for where the code runs, reachability and active exploitation">Worst first (real risk)</button>
-        <button data-v="severity" title="Raw CVSS / rule severity">High → low (severity)</button>
+        <button data-v="risk" class="on">Worst first</button><button data-v="severity">High → low</button>
       </div>
       <div class="seg" id="kind" role="group" aria-label="Type">
         <button data-v="" class="on">All</button><button data-v="dependency">Dependencies</button><button data-v="code">Code</button><button data-v="secret">Secrets</button>
       </div>
-      <select id="exposure" aria-label="Exposure">
-        <option value="">Anywhere</option><option value="server">Server</option><option value="universal">Server + browser</option>
+      <select id="exposure" aria-label="Where it runs">
+        <option value="">Runs anywhere</option><option value="server">Server</option><option value="universal">Server + browser</option>
         <option value="client">Browser only</option><option value="build">Build/test only</option><option value="unused">Not imported</option>
       </select>
       <label class="chk"><input type="checkbox" id="hideDev"> Hide build/dev-only</label>
@@ -154,11 +316,61 @@ pre { margin: 0; padding: 10px 12px; background: var(--panel-2); border-radius: 
 const TOKEN = '__IAMSECURE_TOKEN__';
 const AI = __IAMSECURE_AI__;
 const LEVELS = ['critical', 'high', 'medium', 'low'];
-const state = { report: null, sort: 'risk', kind: '', level: '', exposure: '', hideDev: false, q: '', shown: 150 };
+const PAGE = 100;
+const state = { report: null, view: 'fix', sort: 'risk', kind: '', level: '', exposure: '', hideDev: false, q: '', shown: PAGE, groupMap: new Map() };
+
+// Plain-language explanations, keyed by the vulnerability class the scanner assigns.
+const IMPACT = {
+  malicious: 'This package contains malware. It can steal secrets or tamper with every machine that installs it.',
+  secret: 'Anyone who can read this file, or your shipped JavaScript, can use this credential to get into your accounts.',
+  rce: 'An attacker could run their own commands or code on your server and take it over.',
+  sqli: 'An attacker could read, change or delete the data in your database.',
+  auth: 'An attacker could get past login or permission checks and act as someone else.',
+  ssrf: 'An attacker could make your server send requests to internal systems (admin panels, cloud metadata, private APIs).',
+  path: 'An attacker could read or overwrite files on your server, such as configuration files and keys.',
+  xss: "An attacker could run JavaScript in your visitors' browsers and steal their sessions or data.",
+  proto: 'An attacker could tamper with built-in objects, which can cause crashes, security bypasses or code execution.',
+  redirect: 'An attacker could use your domain to send people to a phishing site.',
+  dos: 'An attacker could crash or freeze your app with a specially crafted request.',
+  leak: 'Private data such as tokens, cookies or user details could leak to an attacker.',
+  crypto: 'Weak cryptography could let an attacker guess tokens or forge data.',
+  other: 'A known security weakness that an attacker may be able to use.',
+};
+const ACTION = { critical: 'Fix now', high: 'Fix soon', medium: 'Plan a fix', low: 'Low priority', none: 'Info' };
+const WHERE = {
+  server: 'On your server, reachable by attackers over the internet',
+  universal: "On your server and in visitors' browsers",
+  client: "Only in visitors' browsers",
+  build: 'Only while building or testing; not shipped to users',
+  unused: 'Installed, but your code never imports it',
+  unknown: 'Could not tell where this runs',
+};
+const cap = (s) => s[0].toUpperCase() + s.slice(1);
+const lvl = (f) => (state.sort === 'severity' ? f.severity : f.risk);
+function cmpVer(a, b) {
+  const p = (v) => String(v).replace(/^v/, '').split(/[.+-]/).map((x) => (/^\d+$/.test(x) ? Number(x) : x));
+  const A = p(a), B = p(b);
+  for (let i = 0; i < Math.max(A.length, B.length); i++) {
+    const x = A[i] ?? 0, y = B[i] ?? 0;
+    if (x === y) continue;
+    if (typeof x === typeof y) return x > y ? 1 : -1;
+    return typeof x === 'number' ? 1 : -1;
+  }
+  return 0;
+}
+const EXPO = { server: ['critical', 'Server'], universal: ['critical', 'Server + browser'], client: ['medium', 'Browser only'], build: ['low', 'Build/test'], unused: ['muted', 'Not imported'], unknown: ['muted', 'Unknown'] };
+const KIND = { dependency: 'Dependency', code: 'Code', secret: 'Secret' };
+const ICON = {
+  dependency: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 7v10l8 4 8-4V7l-8-4z"/><path d="m4 7 8 4 8-4M12 11v10"/></svg>',
+  code: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 7-5 5 5 5M16 7l5 5-5 5"/></svg>',
+  secret: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="15" r="4"/><path d="m11 12 9-9M17 6l3 3M15 8l2 2"/></svg>',
+};
 
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const safeUrl = (u) => (/^https?:\/\//i.test(u) ? esc(u) : '#');
+const host = (u) => { try { return new URL(u).hostname; } catch { return 'link'; } };
+const dot = (tone) => `<span class="dot ${tone}"></span>`;
 const api = (path, opts = {}) => fetch(path, { ...opts, headers: { 'x-iamsecure-token': TOKEN } }).then(async (r) => {
   const body = await r.json();
   if (!r.ok) throw new Error(body.error || r.statusText);
@@ -168,137 +380,370 @@ const api = (path, opts = {}) => fetch(path, { ...opts, headers: { 'x-iamsecure-
 try { const t = localStorage.getItem('iamsecure-theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
 $('#theme').onclick = () => {
   const dark = matchMedia('(prefers-color-scheme: dark)').matches;
-  const cur = document.documentElement.dataset.theme || (dark ? 'dark' : 'light');
-  const next = cur === 'dark' ? 'light' : 'dark';
+  const next = (document.documentElement.dataset.theme || (dark ? 'dark' : 'light')) === 'dark' ? 'light' : 'dark';
   document.documentElement.dataset.theme = next;
   try { localStorage.setItem('iamsecure-theme', next); } catch {}
 };
+$('#download').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(state.report, null, 2)], { type: 'application/json' }));
+  a.download = `iamsecure-${state.report.project.name.replace(/[^\w.-]+/g, '_')}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
+function overall(s) {
+  if (s.byRisk.critical) return { tone: 'critical', word: 'ACTION REQUIRED', detail: `${s.byRisk.critical} critical`, icon: '✕' };
+  if (s.byRisk.high) return { tone: 'high', word: 'ATTENTION', detail: `${s.byRisk.high} high risk`, icon: '▲' };
+  if (s.total) return { tone: 'medium', word: 'MONITOR', detail: 'Minor issues', icon: '●' };
+  return { tone: 'ok', word: 'ALL CLEAR', detail: 'No known issues', icon: '✓' };
+}
+
+function groupRow(name, list) {
+  if (!list.length) return `<li>${dot('ok')}<span>${esc(name)} – Clear</span></li>`;
+  const worst = LEVELS.find((l) => list.some((f) => f.risk === l)) || 'muted';
+  const counts = LEVELS.map((l) => [l, list.filter((f) => f.risk === l).length]).filter(([, n]) => n);
+  return `<li>${dot(worst)}<span>${esc(name)} – ${counts[0][1]} ${counts[0][0]}</span><span class="d">${counts.slice(1).map(([l, n]) => `${n} ${l}`).join(' · ')}</span></li>`;
+}
 
 function header(r) {
-  const p = r.stats.packages;
-  $('#proj').innerHTML = `<b>${esc(r.project.name)}</b> · ${esc(r.project.framework)} · ${esc(r.project.root)}`;
   const s = r.summary;
-  $('#cards').innerHTML = LEVELS.map((l) => `
-    <div class="card ${l} ${state.level === l ? 'on' : ''}" data-level="${l}" title="Click to filter">
-      <div class="l">${l}</div><div class="n">${s.byRisk[l]}</div>
-      <div class="s">by real risk · ${s.bySeverity[l]} by severity</div>
-    </div>`).join('');
-  document.querySelectorAll('.card').forEach((c) => (c.onclick = () => { state.level = state.level === c.dataset.level ? '' : c.dataset.level; state.shown = 150; render(); }));
-  const kinds = { dependency: 0, code: 0, secret: 0 };
-  r.findings.forEach((f) => kinds[f.kind]++);
-  $('#meta').innerHTML = [
-    `<span><b>${p.total}</b> packages (${p.direct} direct, ${p.transitive} transitive)</span>`,
-    r.stats.files != null ? `<span><b>${r.stats.files}</b> source files</span>` : '',
-    `<span><b>${kinds.dependency}</b> dependency advisories · <b>${kinds.code}</b> code issues · <b>${kinds.secret}</b> secrets</span>`,
-    `<span>Scanned ${esc(new Date(r.scannedAt).toLocaleString())} in ${(r.durationMs / 1000).toFixed(1)}s</span>`,
-    AI ? `<span>AI: <b>${esc(AI)}</b></span>` : '',
-  ].join('');
-  $('#warnings').innerHTML = r.warnings.map((w) => `<div class="warn">⚠ ${esc(w)}</div>`).join('');
+  const p = r.stats.packages;
+  $('#crumb').innerHTML = `<span>Projects</span><span class="sep">›</span><span>${esc(r.project.name)}</span>`;
+  $('#counters').innerHTML = LEVELS.map((l) => `
+    <button class="counter ${l} ${s.byRisk[l] ? 'has' : ''} ${state.level === l ? 'on' : ''}" data-level="${l}" title="Show only ${l} (real risk)">
+      <div class="n">${s.byRisk[l]}</div><div class="l">${l}</div>
+    </button>`).join('');
+  document.querySelectorAll('.counter').forEach((b) => (b.onclick = () => { state.level = state.level === b.dataset.level ? '' : b.dataset.level; state.shown = PAGE; render(); }));
+
+  const st = overall(s);
+  const shield = st.tone === 'ok'
+    ? '<svg viewBox="0 0 24 24"><path fill="var(--ok)" d="M12 2 4 5v6c0 5 3.4 9.7 8 11 4.6-1.3 8-6 8-11V5l-8-3z"/><path fill="none" stroke="#fff" stroke-width="2.2" d="m8.5 12 2.5 2.5 4.5-5"/></svg>'
+    : '<svg viewBox="0 0 24 24"><path fill="var(--muted)" d="M12 2 1 21h22L12 2z"/><path stroke="var(--bg)" stroke-width="2.2" d="M12 9v5M12 16.5v2"/></svg>';
+  $('#title').innerHTML = `${shield}<span>Security Report — ${esc(r.project.name)}</span>`;
+  $('#sub').textContent = `${r.project.framework} · ${r.project.root}`;
+
+  const kinds = { dependency: [], code: [], secret: [] };
+  r.findings.forEach((f) => kinds[f.kind].push(f));
+  const top = r.findings.filter((f) => f.risk === 'critical' || f.risk === 'high').slice(0, 3);
+  $('#latest').innerHTML = `
+    <div>
+      <div class="status"><span class="ico">${dot(st.tone)}</span><span><b class="kind">${st.word} –</b> <b>${esc(st.detail)}</b></span></div>
+      <div class="when">${esc(new Date(r.scannedAt).toLocaleString())} · ${(r.durationMs / 1000).toFixed(1)}s</div>
+      <div class="trio">${LEVELS.map((l) => `<div><small>${l[0].toUpperCase() + l.slice(1)}:</small><span class="v">${dot(s.byRisk[l] ? l : 'muted')} ${s.byRisk[l]}</span></div>`).join('')}</div>
+      <div class="rawsev">By raw severity: ${LEVELS.map((l) => `${s.bySeverity[l]} ${l}`).join(' · ')}</div>
+    </div>
+    <div class="prose">
+      <p>Scanned <b>${p.total}</b> packages (${p.direct} direct, ${p.transitive} transitive)${r.stats.files != null ? ` and <b>${r.stats.files}</b> source files` : ''}.
+      Found ${s.total} issue${s.total === 1 ? '' : 's'}: ${kinds.dependency.length} in dependencies, ${kinds.code.length} in your code and ${kinds.secret.length} secret${kinds.secret.length === 1 ? '' : 's'}.</p>
+      ${s.total ? `<p>After weighing where each issue runs, whether your code reaches it and whether it is exploited in the wild, <b>${s.byRisk.critical} ${s.byRisk.critical === 1 ? 'is' : 'are'} critical</b> for this codebase — raw severity alone says ${s.bySeverity.critical}.${AI ? ` AI validation: <b>${esc(AI)}</b>.` : ''}</p>` : ''}
+      ${top.length ? `<p style="margin:0">Fix first:</p><ol class="firstfix">${top.map((f) => `<li><a href="#" data-jump="${esc(f.id)}">${esc(f.kind === 'dependency' ? `${f.package.name}@${f.package.version}` : `${f.location.file}:${f.location.line}`)}</a> — ${esc(f.title)}</li>`).join('')}</ol>` : ''}
+      <ul class="groups">${groupRow('Dependencies', kinds.dependency)}${groupRow('Your code', kinds.code)}${groupRow('Secrets', kinds.secret)}</ul>
+    </div>`;
+  document.querySelectorAll('[data-jump]').forEach((a) => (a.onclick = (e) => { e.preventDefault(); jump(a.dataset.jump); }));
+  $('#warnings').innerHTML = r.warnings.map((w) => `<div class="warn">${esc(w)}</div>`).join('');
+}
+
+function jump(id) {
+  Object.assign(state, { kind: '', level: '', exposure: '', hideDev: false, q: '' });
+  $('#q').value = ''; $('#exposure').value = ''; $('#hideDev').checked = false;
+  if (state.view === 'fix') {
+    const groups = buildGroups(filtered());
+    const gi = groups.findIndex((g) => g.findings.some((f) => f.id === id));
+    if (gi >= state.shown) state.shown = gi + 1;
+    render();
+    const card = gi === -1 ? null : document.querySelector(`.card[data-key="${CSS.escape(groups[gi].key)}"]`);
+    if (card) { openCard(card, true); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    return;
+  }
+  const idx = filtered().findIndex((f) => f.id === id);
+  if (idx >= state.shown) state.shown = idx + 1;
+  render();
+  const el = document.querySelector(`[data-id="${CSS.escape(id)}"]`);
+  if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); toggleMore(el, true); }
 }
 
 function filtered() {
   const q = state.q.toLowerCase();
-  const levelField = state.sort === 'severity' ? 'severity' : 'risk';
-  const primary = state.sort === 'severity' ? 'severityScore' : 'riskScore';
-  const secondary = state.sort === 'severity' ? 'riskScore' : 'severityScore';
+  const lf = state.sort === 'severity' ? 'severity' : 'risk';
+  const a = state.sort === 'severity' ? 'severityScore' : 'riskScore';
+  const b = state.sort === 'severity' ? 'riskScore' : 'severityScore';
   return state.report.findings
     .filter((f) => !state.kind || f.kind === state.kind)
-    .filter((f) => !state.level || f[levelField] === state.level)
+    .filter((f) => !state.level || f[lf] === state.level)
     .filter((f) => !state.exposure || f.exposure?.context === state.exposure)
     .filter((f) => !state.hideDev || !['build', 'unused'].includes(f.exposure?.context))
     .filter((f) => !q || JSON.stringify([f.title, f.ruleId, f.package?.name, f.location?.file, f.advisory?.aliases, f.advisory?.id]).toLowerCase().includes(q))
-    .sort((a, b) => b[primary] - a[primary] || b[secondary] - a[secondary]);
+    .sort((x, y) => y[a] - x[a] || y[b] - x[b]);
 }
 
-function chipsFor(f) {
-  const c = [];
-  if (f.advisory?.malicious) c.push('<span class="chip danger">MALICIOUS PACKAGE</span>');
-  if (f.exploit?.kev) c.push('<span class="chip danger">Actively exploited (CISA KEV)</span>');
-  if (f.exposure) c.push(`<span class="chip">${esc(f.exposure.label)}</span>`);
+function tagsFor(f) {
+  const t = [];
+  if (f.advisory?.malicious) t.push('<span class="tag red">Malicious package</span>');
+  if (f.exploit?.kev) t.push('<span class="tag red">Exploited in the wild</span>');
+  if (f.tainted) t.push('<span class="tag red">User input reaches it</span>');
   if (f.kind === 'dependency') {
-    c.push(`<span class="chip">${f.package.direct ? 'direct' : 'transitive'}</span>`);
-    if (!f.package.prod) c.push('<span class="chip">dev dependency</span>');
-    c.push(f.package.fixedIn ? `<span class="chip fix">fix → ${esc(f.package.fixedIn)}</span>` : '<span class="chip">no fix yet</span>');
-  } else {
-    c.push(`<span class="chip">${esc(f.ruleId)}</span>`);
-    if (f.confidence) c.push(`<span class="chip">${esc(f.confidence)} confidence</span>`);
-    if (f.tainted) c.push('<span class="chip danger">user input reaches it</span>');
-  }
-  if (f.ai) c.push(`<span class="chip ai">AI: ${esc(f.ai.verdict.replace('_', ' '))}</span>`);
-  return c.join('');
+    t.push(`<span class="tag">${f.package.direct ? 'Direct' : 'Transitive'}</span>`);
+    if (!f.package.prod) t.push('<span class="tag">Dev dependency</span>');
+    t.push(f.package.fixedIn ? `<span class="tag fix">Fix → ${esc(f.package.fixedIn)}</span>` : '<span class="tag">No fix yet</span>');
+  } else if (f.confidence) t.push(`<span class="tag">${esc(f.confidence)} confidence</span>`);
+  if (f.ai) t.push(`<span class="tag">AI: ${esc(f.ai.verdict.replace('_', ' '))}</span>`);
+  return t.join('');
 }
 
 function aiBlock(f) {
   if (f.ai) {
-    return `<div class="ai-box"><h4>AI review (${esc(f.ai.provider)})</h4>
-      <div><span class="v ${esc(f.ai.verdict)}">${esc(f.ai.verdict.replace('_', ' '))}</span> · confidence ${Math.round((f.ai.confidence ?? 0) * 100)}%</div>
-      <p style="margin:6px 0">${esc(f.ai.reasoning)}</p>${f.ai.fix ? `<h4>Suggested fix</h4><pre>${esc(f.ai.fix)}</pre>` : ''}</div>`;
+    return `<div class="ai"><h4>AI review · ${esc(f.ai.provider)}</h4>
+      <div><span class="v">${esc(f.ai.verdict.replace('_', ' '))}</span> · ${Math.round((f.ai.confidence ?? 0) * 100)}% confidence</div>
+      <p style="margin:6px 0">${esc(f.ai.reasoning)}</p>${f.ai.fix ? `<pre>${esc(f.ai.fix)}</pre>` : ''}</div>`;
   }
-  if (!AI) return '<div class="hint" style="margin:0">Run with <code>--ai claude-cli</code> (or anthropic / openai / ollama) to get an AI exploitability review here.</div>';
-  return `<div><button class="btn" data-analyze="${esc(f.id)}">Ask AI (${esc(AI)}) whether this is exploitable here</button></div>`;
+  if (!AI) return '<div class="hint">Run with <code>--ai claude-cli</code> (or anthropic / openai / ollama) to have AI check whether this is exploitable here.</div>';
+  return `<div><button class="btn" data-analyze="${esc(f.id)}">Ask AI whether this is exploitable here</button></div>`;
 }
 
-function detail(f) {
+function moreHtml(f) {
   const parts = [];
-  if (f.reasons?.length) parts.push(`<div><h4>Why it ranks here</h4><ul>${f.reasons.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></div>`);
   if (f.kind === 'dependency') {
     const a = f.advisory;
-    if (f.package.path.length > 1) parts.push(`<div><h4>Why it is installed</h4><div class="path">${f.package.path.map((k) => `<span>${esc(k)}</span>`).join('›')}</div></div>`);
-    parts.push(`<div><h4>Fix</h4>${esc(f.fix)}</div>`);
-    const ids = [a.id, ...a.aliases].map((id) => `<code>${esc(id)}</code>`).join(' ');
+    if (f.package.path.length > 1) parts.push(`<div><h4>Why it is installed</h4><div class="path">${f.package.path.map((k) => `<code>${esc(k)}</code>`).join('<span>›</span>')}</div></div>`);
     const intel = [];
     if (a.cvss) intel.push(`CVSS ${esc(a.cvss.score ?? '')} <code>${esc(a.cvss.vector)}</code>`);
-    if (a.cwes?.length) intel.push(a.cwes.map((c) => esc(c)).join(', '));
-    if (f.exploit?.epss) intel.push(`EPSS ${(f.exploit.epss.epss * 100).toFixed(2)}% (percentile ${(f.exploit.epss.percentile * 100).toFixed(0)})`);
-    if (f.exploit?.kev) intel.push(`<b>CISA KEV since ${esc(f.exploit.kev.dateAdded)}</b>`);
-    parts.push(`<div><h4>Advisory</h4><div>${ids}</div><div class="hint" style="margin:4px 0">${intel.join(' · ')}</div>
-      ${a.details ? `<details><summary>Details</summary><pre>${esc(a.details)}</pre></details>` : ''}
-      <div style="margin-top:6px"><a href="${safeUrl(a.url)}" target="_blank" rel="noopener noreferrer">osv.dev</a>
-      ${a.references.slice(0, 4).map((u) => ` · <a href="${safeUrl(u)}" target="_blank" rel="noopener noreferrer">${esc(new URL(u).hostname)}</a>`).join('')}</div></div>`);
-  } else {
-    parts.push(`<div><h4>Location</h4><code>${esc(f.location.file)}:${f.location.line}</code><pre style="margin-top:6px">${esc(f.location.snippet)}</pre></div>`);
-    parts.push(`<div><h4>Fix</h4>${esc(f.fix)}</div>`);
-    if (f.cwe) {
-      const n = f.cwe.replace('CWE-', '');
-      parts.push(`<div class="hint" style="margin:0"><a href="https://cwe.mitre.org/data/definitions/${esc(n)}.html" target="_blank" rel="noopener noreferrer">${esc(f.cwe)}</a></div>`);
-    }
+    if (a.cwes?.length) intel.push(a.cwes.map(esc).join(', '));
+    if (f.exploit?.epss) intel.push(`EPSS ${(f.exploit.epss.epss * 100).toFixed(2)}%`);
+    if (f.exploit?.kev) intel.push(`CISA KEV since ${esc(f.exploit.kev.dateAdded)}`);
+    parts.push(`<div><h4>Advisory</h4><div class="hint" style="margin:0 0 6px">${[a.id, ...a.aliases].map(esc).join(' · ')}${intel.length ? ' — ' + intel.join(' · ') : ''}</div>
+      ${a.details ? `<pre>${esc(a.details)}</pre>` : ''}
+      <div><a href="${safeUrl(a.url)}" target="_blank" rel="noopener noreferrer">osv.dev</a>${a.references.slice(0, 4).map((u) => ` · <a href="${safeUrl(u)}" target="_blank" rel="noopener noreferrer">${esc(host(u))}</a>`).join('')}</div></div>`);
+  } else if (f.cwe) {
+    parts.push(`<div><h4>Reference</h4><a href="https://cwe.mitre.org/data/definitions/${esc(f.cwe.replace('CWE-', ''))}.html" target="_blank" rel="noopener noreferrer">${esc(f.cwe)}</a> · rule <code>${esc(f.ruleId)}</code></div>`);
   }
   parts.push(aiBlock(f));
   return parts.join('');
 }
 
-function rowHtml(f) {
-  const lvl = state.sort === 'severity' ? f.severity : f.risk;
-  const name = f.kind === 'dependency' ? `${f.package.name}@${f.package.version}` : `${f.location.file}:${f.location.line}`;
-  return `<details class="f ${lvl}" data-id="${esc(f.id)}">
-    <summary>
-      <span class="badge ${lvl}">${lvl.toUpperCase()}</span>
-      <span class="scores"><b>${(state.sort === 'severity' ? f.severityScore : f.riskScore).toFixed(1)}</b> ${state.sort === 'severity' ? 'sev' : 'risk'}<br>${(state.sort === 'severity' ? f.riskScore : f.severityScore).toFixed(1)} ${state.sort === 'severity' ? 'risk' : 'sev'}</span>
-      <span class="ttl"><span class="name">${esc(name)}</span> <span class="desc">— ${esc(f.title)}</span><div class="chips">${chipsFor(f)}</div></span>
-    </summary>
-    <div class="fbody"></div>
-  </details>`;
+function entryHtml(f) {
+  const level = state.sort === 'severity' ? f.severity : f.risk;
+  const ctx = f.exposure?.context ?? 'unknown';
+  const subject = f.kind === 'dependency' ? `${f.package.name}@${f.package.version}` : `${f.location.file}:${f.location.line}`;
+  const reasons = (f.reasons ?? []).filter((r) => !/^AI \(/.test(r));
+  return `<article class="entry" data-id="${esc(f.id)}">
+    <div>
+      <div class="head"><span class="ico">${ICON[f.kind]}</span><span><span class="lvl ${level}">${level} –</span> <span class="kind">${KIND[f.kind]}</span></span></div>
+      <div class="subject mono">${esc(subject)}</div>
+      <div class="trio">
+        <div><small>Risk:</small><span class="v">${dot(f.risk)} ${f.riskScore.toFixed(1)}</span></div>
+        <div><small>Severity:</small><span class="v">${dot(f.severity)} ${f.severityScore.toFixed(1)}</span></div>
+        <div><small>Runs:</small><span class="v">${dot(EXPO[ctx][0])} ${EXPO[ctx][1]}</span></div>
+      </div>
+      <div class="tags">${tagsFor(f)}</div>
+    </div>
+    <div class="desc">
+      <p class="ttl">${esc(f.title)}</p>
+      ${f.kind !== 'dependency' && f.location?.snippet ? `<pre>${esc(f.location.snippet)}</pre>` : ''}
+      ${reasons.length ? `<ul>${reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+      ${f.fix ? `<p class="fix"><b>Fix:</b> ${esc(f.fix)}</p>` : ''}
+      ${f.ai ? `<p class="fix" style="color:var(--muted)"><b style="color:var(--accent)">AI:</b> ${esc(f.ai.verdict.replace('_', ' '))} — ${esc(f.ai.reasoning.slice(0, 220))}${f.ai.reasoning.length > 220 ? '…' : ''}</p>` : ''}
+      <button class="readall" type="button">… <span>read all</span></button>
+      <div class="more" hidden></div>
+    </div>
+  </article>`;
+}
+
+function toggleMore(entry, open) {
+  const more = entry.querySelector('.more');
+  const btn = entry.querySelector('.readall');
+  const show = open ?? more.hidden;
+  if (show && !more.innerHTML) {
+    const f = state.report.findings.find((x) => x.id === entry.dataset.id);
+    more.innerHTML = moreHtml(f);
+    wireAi(more);
+  }
+  more.hidden = !show;
+  btn.innerHTML = show ? '<span>show less</span>' : '… <span>read all</span>';
+}
+
+/** Dependency findings collapse into one card per package (one upgrade fixes them all); code/secret findings stay one per card. */
+function buildGroups(list) {
+  const byPkg = new Map();
+  const out = [];
+  for (const f of list) {
+    if (f.kind !== 'dependency') {
+      out.push({ type: 'single', key: f.id, findings: [f] });
+      continue;
+    }
+    const k = `${f.package.ecosystem}:${f.package.name}@${f.package.version}`;
+    if (!byPkg.has(k)) {
+      const g = { type: 'pkg', key: k, findings: [] };
+      byPkg.set(k, g);
+      out.push(g);
+    }
+    byPkg.get(k).findings.push(f);
+  }
+  return out; // list is sorted, so each group's first finding is its worst and groups are in priority order
+}
+
+function installCmd(p, target) {
+  if (p.ecosystem === 'Packagist') return `composer require ${p.name}:^${target}`;
+  if (p.ecosystem === 'PyPI') return `pip install "${p.name}>=${target}"`;
+  if (/yarn/.test(p.lockfile)) return `yarn add ${p.name}@${target}`;
+  if (/pnpm/.test(p.lockfile)) return `pnpm add ${p.name}@${target}`;
+  return `npm install ${p.name}@${target}`;
+}
+
+function pkgCard(g) {
+  const top = g.findings[0];
+  const p = top.package;
+  const level = lvl(top);
+  const n = g.findings.length;
+  const fixes = g.findings.map((f) => f.package.fixedIn);
+  const target = fixes.filter(Boolean).sort(cmpVer).at(-1);
+  const noFix = fixes.filter((x) => !x).length;
+  const root = !p.direct && p.path.length > 1 ? p.path[0].slice(0, p.path[0].lastIndexOf('@')) : null;
+  const ctx = top.exposure?.context ?? 'unknown';
+  const malicious = top.advisory.malicious;
+
+  const title = malicious ? `Remove ${p.name} — it is a known malicious package` : target ? `Update ${p.name} from ${p.version} to ${target}` : `Replace or patch ${p.name} ${p.version}`;
+  let how;
+  if (malicious) how = esc(top.fix);
+  else if (!target) how = `No patched version has been released yet. Consider replacing ${esc(p.name)}, or limit how your app uses it.`;
+  else if (!root) how = `Upgrade to ${esc(target)} or later:<br><code>${esc(installCmd(p, target))}</code>${noFix ? `<br>${noFix} of these issues ${noFix === 1 ? 'has' : 'have'} no fix yet, so check them after upgrading.` : ''}`;
+  else how = `You don't install ${esc(p.name)} yourself; <b>${esc(root)}</b> brings it in. Update ${esc(root)} to a release that uses ${esc(p.name)} ${esc(target)} or later, or force the version with ${p.ecosystem === 'npm' ? '<code>"overrides"</code> in package.json' : "your package manager's override setting"}.`;
+
+  const tags = ['<span class="tag">Dependency</span>'];
+  if (malicious) tags.push('<span class="tag red">Malware</span>');
+  if (g.findings.some((f) => f.exploit?.kev)) tags.push('<span class="tag red">Exploited in the wild</span>');
+  if (top.ai) tags.push(`<span class="tag">AI: ${esc(top.ai.verdict.replace('_', ' '))}</span>`);
+
+  return shell(g, level, title, n === 1 ? '1 issue' : `${n} issues`, tags,
+    `${esc(p.name)}@${esc(p.version)}${root ? ` · via ${esc(root)}` : ''}${!p.prod ? ' · dev dependency' : ''}`,
+    `<div class="k">What's wrong</div><div>${n === 1 ? 'This version has a known security issue' : `This version has <b>${n} known security issues</b>`}. The worst: “${esc(top.title)}”.</div>
+      <div class="k">What could happen</div><div>${esc(IMPACT[top.vulnClass] ?? IMPACT.other)}</div>
+      <div class="k">Where it runs</div><div>${esc(WHERE[ctx])}</div>
+      <div class="k">How to fix</div><div>${how}</div>`,
+    `Show ${n === 1 ? 'details' : `all ${n} issues and details`}`);
+}
+
+/** Collapsed: one colored bar. Expanded: the plain-language card underneath. */
+function shell(g, level, title, meta, tags, loc, rows, toggleLabel) {
+  return `<article class="card ${level}" data-key="${esc(g.key)}">
+    <button class="fbar ${level}" type="button" aria-expanded="false">
+      <span class="bar-lvl">${cap(level)} · ${ACTION[level]}</span>
+      <span class="bar-title">${esc(title)}</span>
+      <span class="bar-meta">${esc(meta)}</span>
+      <span class="chev" aria-hidden="true">›</span>
+    </button>
+    <div class="body" hidden>
+      <div class="pills">${tags.join('')}</div>
+      <div class="loc mono">${loc}</div>
+      <div class="rows">${rows}</div>
+      <button class="toggle" type="button">${toggleLabel}</button>
+      <div class="details" hidden></div>
+    </div>
+  </article>`;
+}
+
+function openCard(card, open) {
+  const body = card.querySelector('.body');
+  const show = open ?? body.hidden;
+  body.hidden = !show;
+  card.classList.toggle('open', show);
+  card.querySelector('.fbar').setAttribute('aria-expanded', String(show));
+}
+
+function pkgDetails(g) {
+  const top = g.findings[0];
+  const parts = [];
+  if (top.package.path.length > 1) parts.push(`<div><h4>Why it is installed</h4><div class="path">${top.package.path.map((k) => `<code>${esc(k)}</code>`).join('<span>›</span>')}</div></div>`);
+  const reasons = (top.reasons ?? []).filter((x) => !/^AI \(/.test(x));
+  if (reasons.length) parts.push(`<div><h4>Why it is ranked ${esc(lvl(top))}</h4><ul>${reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`);
+  parts.push(`<div><h4>${g.findings.length === 1 ? 'The issue' : `All ${g.findings.length} issues`}</h4><table class="advs"><tbody>${g.findings.map((f) => `
+    <tr><td><span class="pill ${lvl(f)}">${cap(lvl(f))}</span></td>
+    <td>${esc(f.title)}<div class="hint" style="margin:2px 0 0">${esc(IMPACT[f.vulnClass] ?? IMPACT.other)}</div></td>
+    <td class="nowrap">${f.package.fixedIn ? `Fixed in ${esc(f.package.fixedIn)}` : 'No fix yet'}</td>
+    <td><a href="${safeUrl(f.advisory.url)}" target="_blank" rel="noopener noreferrer">${esc(f.advisory.aliases.find((a) => a.startsWith('CVE-')) ?? f.advisory.id)}</a></td></tr>`).join('')}</tbody></table></div>`);
+  parts.push(aiBlock(top));
+  return parts.join('');
+}
+
+function singleCard(g) {
+  const f = g.findings[0];
+  const level = lvl(f);
+  const ctx = f.exposure?.context ?? 'unknown';
+  const wrong = f.kind === 'secret'
+    ? 'A password, key or token is written directly in this file.'
+    : f.tainted
+      ? 'This line uses data that comes straight from the request (URL, form or body) without making it safe first.'
+      : 'This line matches a risky coding pattern.';
+  const tags = [`<span class="tag">${f.kind === 'secret' ? 'Secret' : 'Your code'}</span>`];
+  if (f.tainted) tags.push('<span class="tag red">User input reaches it</span>');
+  if (f.ai) tags.push(`<span class="tag">AI: ${esc(f.ai.verdict.replace('_', ' '))}</span>`);
+  return shell(g, level, f.title, `${f.location.file}:${f.location.line}`, tags,
+    `${esc(f.location.file)} · line ${f.location.line}`,
+    `<div class="k">What's wrong</div><div>${wrong}</div>
+      <div class="k">What could happen</div><div>${esc(IMPACT[f.vulnClass] ?? IMPACT.other)}</div>
+      <div class="k">Where it runs</div><div>${esc(WHERE[ctx])}</div>
+      ${f.location.snippet ? `<div class="k">The code</div><div><pre>${esc(f.location.snippet)}</pre></div>` : ''}
+      <div class="k">How to fix</div><div>${esc(f.fix)}</div>`,
+    'Show details');
+}
+
+function singleDetails(g) {
+  const f = g.findings[0];
+  const reasons = (f.reasons ?? []).filter((x) => !/^AI \(/.test(x));
+  return (reasons.length ? `<div><h4>Why it is ranked ${esc(lvl(f))}</h4><ul>${reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '') + moreHtml(f);
+}
+
+function toggleCard(card, open) {
+  const box = card.querySelector('.details');
+  const btn = card.querySelector('.toggle');
+  const show = open ?? box.hidden;
+  if (show && !box.innerHTML) {
+    const g = state.groupMap.get(card.dataset.key);
+    box.innerHTML = g.type === 'pkg' ? pkgDetails(g) : singleDetails(g);
+    wireAi(box);
+  }
+  box.hidden = !show;
+  btn.dataset.label ??= btn.textContent;
+  btn.textContent = show ? 'Hide details' : btn.dataset.label;
+}
+
+function renderFix(list) {
+  const groups = buildGroups(list);
+  state.groupMap = new Map(groups.map((g) => [g.key, g]));
+  const deps = groups.filter((g) => g.type === 'pkg').length;
+  $('#hint').textContent = `${groups.length} things to fix, most urgent first.${deps ? ` Issues in the same package are grouped (${deps} package${deps === 1 ? '' : 's'}), because one update usually fixes all of them.` : ''}`;
+  $('#list').innerHTML = '<div class="listctl"><button type="button" data-all="1">Expand all</button><button type="button" data-all="">Collapse all</button></div>' +
+    groups.slice(0, state.shown).map((g) => (g.type === 'pkg' ? pkgCard(g) : singleCard(g))).join('') +
+    (groups.length > state.shown ? `<div class="showmore"><button class="btn" id="more">Show ${Math.min(PAGE, groups.length - state.shown)} more of ${groups.length - state.shown}</button></div>` : '');
+  $('#more')?.addEventListener('click', () => { state.shown += PAGE; render(); });
+  document.querySelectorAll('.card').forEach((c) => {
+    c.querySelector('.fbar').onclick = () => openCard(c);
+    c.querySelector('.toggle').onclick = () => toggleCard(c);
+  });
+  document.querySelectorAll('[data-all]').forEach((b) => (b.onclick = () => document.querySelectorAll('.card').forEach((c) => openCard(c, !!b.dataset.all))));
+  // Like the tree: open the most urgent issue so the list never starts fully collapsed.
+  const first = document.querySelector('#list .card');
+  if (first) openCard(first, true);
 }
 
 function render() {
   const r = state.report;
   header(r);
   $('#hint').textContent = state.sort === 'risk'
-    ? 'Real risk = severity adjusted for where the code runs (server vs browser vs build), whether your code calls the vulnerable function, and whether it is exploited in the wild.'
-    : 'Severity = the raw CVSS score of the advisory, or the rule severity for code issues — independent of how your app uses it.';
+    ? 'Worst first: severity adjusted for where the code runs, whether your code reaches it, and whether it is exploited in the wild.'
+    : 'High → low: the raw CVSS score of each advisory or the rule severity, ignoring how your app uses it.';
   const list = filtered();
   if (!list.length) {
-    $('#list').innerHTML = `<div class="empty">${r.findings.length ? 'No findings match these filters.' : '✔ No known vulnerabilities or insecure code patterns found.'}</div>`;
+    $('#list').innerHTML = `<div class="empty">${r.findings.length ? 'No findings match these filters.' : '✓ No known vulnerabilities or insecure code patterns found.'}</div>`;
     return;
   }
-  const byId = new Map(list.map((f) => [f.id, f]));
-  $('#list').innerHTML = list.slice(0, state.shown).map(rowHtml).join('') +
-    (list.length > state.shown ? `<div style="text-align:center;margin:14px"><button class="btn" id="more">Show ${Math.min(150, list.length - state.shown)} more of ${list.length - state.shown}</button></div>` : '');
-  $('#more')?.addEventListener('click', () => { state.shown += 150; render(); });
-  document.querySelectorAll('details.f').forEach((d) => d.addEventListener('toggle', () => {
-    const body = d.querySelector('.fbody');
-    if (d.open && !body.innerHTML) { body.innerHTML = detail(byId.get(d.dataset.id)); wireAi(body); }
-  }));
+  if (state.view === 'fix') return renderFix(list);
+  $('#list').innerHTML = list.slice(0, state.shown).map(entryHtml).join('') +
+    (list.length > state.shown ? `<div class="showmore"><button class="btn" id="more">Show ${Math.min(PAGE, list.length - state.shown)} more of ${list.length - state.shown}</button></div>` : '');
+  $('#more')?.addEventListener('click', () => { state.shown += PAGE; render(); });
+  document.querySelectorAll('.entry').forEach((e) => (e.querySelector('.readall').onclick = () => toggleMore(e)));
+  const firstEntry = document.querySelector('#list .entry');
+  if (firstEntry) toggleMore(firstEntry, true);
 }
 
 function wireAi(scope) {
@@ -308,77 +753,214 @@ function wireAi(scope) {
       const updated = await api(`/api/analyze?id=${encodeURIComponent(b.dataset.analyze)}`, { method: 'POST' });
       const i = state.report.findings.findIndex((f) => f.id === updated.id);
       state.report.findings[i] = updated;
-      const box = b.closest('.fbody');
-      box.innerHTML = detail(updated);
-      wireAi(box);
+      const card = b.closest('.card');
+      if (card) {
+        // Risk may have changed, so the card can move; re-render and reopen it.
+        const key = card.dataset.key;
+        render();
+        const fresh = document.querySelector(`.card[data-key="${CSS.escape(key)}"]`);
+        if (fresh) { openCard(fresh, true); toggleCard(fresh, true); }
+        return;
+      }
+      const entry = b.closest('.entry');
+      entry.outerHTML = entryHtml(updated);
+      const fresh = document.querySelector(`[data-id="${CSS.escape(updated.id)}"]`);
+      fresh.querySelector('.readall').onclick = () => toggleMore(fresh);
+      toggleMore(fresh, true);
     } catch (e) { b.disabled = false; b.textContent = `Failed: ${e.message} — retry`; }
   }));
 }
 
-function renderTree() {
-  const r = state.report;
+// ── dependency tree ─────────────────────────────────
+const tree = { mode: 'vuln', q: '', graphs: [] };
+
+/** Per lockfile: vulnerable packages, and for every node the set of vulnerable packages at or below it. */
+function prepTree() {
   const vuln = new Map();
-  for (const f of r.findings) {
+  for (const f of state.report.findings) {
     if (f.kind !== 'dependency') continue;
     const k = `${f.package.name}@${f.package.version}`;
-    const cur = vuln.get(k) ?? { n: 0, worst: 'low', max: 0 };
+    const cur = vuln.get(k) ?? { n: 0, worst: 'low', max: -1, first: f.id, prod: f.package.prod };
     cur.n++;
-    if (f.riskScore > cur.max) { cur.max = f.riskScore; cur.worst = f.risk; }
+    if (f.riskScore > cur.max) { cur.max = f.riskScore; cur.worst = f.risk; cur.first = f.id; }
     vuln.set(k, cur);
   }
-  const html = r.tree.map((g) => {
+  tree.vuln = vuln;
+  tree.graphs = state.report.tree.map((g, gi) => {
     const memo = new Map();
-    const count = (key, stack = new Set()) => {
+    const below = (key, stack = new Set()) => {
       if (memo.has(key)) return memo.get(key);
       if (stack.has(key)) return new Set();
       stack.add(key);
       const s = new Set(vuln.has(key) ? [key] : []);
-      for (const d of g.nodes[key]?.deps ?? []) for (const x of count(d, stack)) s.add(x);
+      for (const d of g.nodes[key]?.deps ?? []) for (const x of below(d, stack)) s.add(x);
       stack.delete(key);
       memo.set(key, s);
       return s;
     };
-    const nodeLabel = (key) => {
-      const v = vuln.get(key);
-      return `<span class="node ${v ? 'vuln' : ''}">${esc(key)}</span>${v ? ` <span class="badge ${v.worst}">${v.n} issue${v.n > 1 ? 's' : ''}</span>` : ''}`;
-    };
-    const sub = (key, depth, path) => {
-      const kids = (g.nodes[key]?.deps ?? []).filter((d) => !path.has(d) && count(d).size);
-      if (!kids.length || depth > 14) return '';
-      return `<ul>${kids.map((d) => {
-        const inner = sub(d, depth + 1, new Set([...path, d]));
-        const n = count(d).size;
-        return `<li>${inner ? `<details><summary>${nodeLabel(d)} <span class="hint count">${n} vulnerable below</span></summary>${inner}</details>` : nodeLabel(d)}</li>`;
-      }).join('')}</ul>`;
-    };
-    const roots = g.roots.map((rt) => ({ ...rt, n: count(rt.key).size })).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name));
-    const dirty = roots.filter((rt) => rt.n);
-    const clean = roots.filter((rt) => !rt.n);
-    return `<h3 style="margin:8px 0">${esc(g.lockfile)}</h3>
-      <p class="hint">Direct dependencies and the paths that lead to vulnerable packages. ${dirty.length} of ${roots.length} direct dependencies pull in something vulnerable.</p>
-      <div class="tree"><ul>${dirty.map((rt) => `<li><details><summary>${nodeLabel(rt.key)} <span class="hint count">${rt.n} vulnerable package${rt.n > 1 ? 's' : ''} in subtree</span>${rt.dev ? ' <span class="chip">dev</span>' : ''}${rt.workspace !== '.' ? ` <span class="chip">${esc(rt.workspace)}</span>` : ''}</summary>${sub(rt.key, 0, new Set([rt.key]))}</details></li>`).join('')}</ul></div>
-      ${clean.length ? `<details style="margin-top:10px"><summary class="hint">${clean.length} direct dependencies with no known issues</summary><p class="mono">${clean.map((rt) => esc(rt.key)).join(', ')}</p></details>` : ''}`;
-  }).join('');
-  $('#tab-tree').innerHTML = html || '<div class="empty">No lockfile was found, so there is no dependency tree.</div>';
+    return { ...g, gi, below };
+  });
 }
+
+const splitKey = (k) => { const i = k.lastIndexOf('@'); return i > 0 ? [k.slice(0, i), k.slice(i + 1)] : [k, '']; };
+const worstOf = (keys) => LEVELS.find((l) => [...keys].some((k) => tree.vuln.get(k)?.worst === l)) ?? null;
+const rank = (lvl) => (lvl ? LEVELS.indexOf(lvl) : LEVELS.length);
+/** Most dangerous branch first (worst level, then how much is vulnerable), clean ones last, then by name. */
+const byDanger = (g) => (a, b) => rank(worstOf(g.below(a))) - rank(worstOf(g.below(b))) || g.below(b).size - g.below(a).size || a.localeCompare(b);
+
+function kidsOf(g, key, path) {
+  const deps = (g.nodes[key]?.deps ?? []).filter((d) => !path.includes(d) && g.nodes[d]);
+  const list = tree.mode === 'vuln' ? deps.filter((d) => g.below(d).size) : deps;
+  return list.sort(byDanger(g));
+}
+
+function nodeHtml(g, key, path, { root = null } = {}) {
+  const [name, ver] = splitKey(key);
+  const v = tree.vuln.get(key);
+  const under = g.below(key);
+  const belowOnly = under.size - (v ? 1 : 0);
+  const kids = kidsOf(g, key, path);
+  const node = g.nodes[key];
+  const worst = v ? v.worst : worstOf(under);
+  const bits = [
+    kids.length ? `<button class="tv-tog" type="button" aria-expanded="false" aria-label="Show what ${esc(name)} depends on">›</button>` : '<span class="tv-leaf"></span>',
+    dot(v ? v.worst : under.size ? 'muted' : 'ok'),
+    `<span class="tv-name">${esc(name)}</span><span class="tv-ver">@${esc(ver)}</span>`,
+  ];
+  if (root?.dev || (node && !node.prod)) bits.push('<span class="tag">dev</span>');
+  if (root && root.workspace !== '.') bits.push(`<span class="tag">${esc(root.workspace)}</span>`);
+  if (v) bits.push(`<span class="pill ${v.worst}">${v.n} issue${v.n > 1 ? 's' : ''}</span><a class="tv-fix" data-fixjump="${esc(v.first)}">How to fix</a>`);
+  if (belowOnly > 0) bits.push(`<span class="tv-below">${belowOnly} vulnerable package${belowOnly > 1 ? 's' : ''} below</span>`);
+  if (root && !under.size) bits.push('<span class="tv-below">no known issues</span>');
+  const p = encodeURIComponent(JSON.stringify([...path, key]));
+  const cls = root ? `tv-root ${worst ?? ''}` : '';
+  return `<li class="${cls}" data-g="${g.gi}" data-key="${esc(key)}" data-path="${p}"><div class="tv-node ${v || under.size ? '' : 'clean'}">${bits.join('')}</div></li>`;
+}
+
+const CHUNK = 60;
+function toggleNode(li, open) {
+  const btn = li.querySelector(':scope > .tv-node > .tv-tog');
+  if (!btn) return;
+  let ul = li.querySelector(':scope > ul');
+  const show = open ?? btn.getAttribute('aria-expanded') !== 'true';
+  if (show && !ul) {
+    const g = tree.graphs[Number(li.dataset.g)];
+    const path = JSON.parse(decodeURIComponent(li.dataset.path));
+    const kids = kidsOf(g, li.dataset.key, path);
+    ul = document.createElement('ul');
+    ul.innerHTML = kids.slice(0, CHUNK).map((k) => nodeHtml(g, k, path)).join('') +
+      (kids.length > CHUNK ? `<li class="tv-more">… and ${kids.length - CHUNK} more</li>` : '');
+    li.append(ul);
+  }
+  if (ul) ul.hidden = !show;
+  btn.setAttribute('aria-expanded', String(show));
+}
+
+/** "Why is X installed?" — shortest chain from every direct dependency that reaches X. */
+function whyInstalled(q) {
+  const out = [];
+  for (const g of tree.graphs) {
+    const matches = Object.keys(g.nodes).filter((k) => splitKey(k)[0].toLowerCase().includes(q)).sort((a, b) => (tree.vuln.has(b) - tree.vuln.has(a)) || a.localeCompare(b)).slice(0, 15);
+    for (const target of matches) {
+      const chains = [];
+      for (const r of g.roots) {
+        const parent = new Map([[r.key, null]]);
+        const queue = [r.key];
+        for (let i = 0; i < queue.length && !parent.has(target); i++) {
+          for (const d of g.nodes[queue[i]]?.deps ?? []) if (!parent.has(d)) { parent.set(d, queue[i]); queue.push(d); }
+        }
+        if (!parent.has(target)) continue;
+        const chain = [];
+        for (let k = target; k; k = parent.get(k)) chain.unshift(k);
+        chains.push({ chain, dev: r.dev });
+      }
+      chains.sort((a, b) => a.chain.length - b.chain.length);
+      const v = tree.vuln.get(target);
+      const [name, ver] = splitKey(target);
+      out.push(`<div class="why"><div class="tv-node">${dot(v ? v.worst : 'ok')}<span class="tv-name">${esc(name)}</span><span class="tv-ver">@${esc(ver)}</span>
+        ${v ? `<span class="pill ${v.worst}">${v.n} issue${v.n > 1 ? 's' : ''}</span><a class="tv-fix" data-fixjump="${esc(v.first)}">How to fix</a>` : '<span class="tv-below">no known issues</span>'}</div>
+        <div class="hint" style="margin:0">${chains.length === 0 ? 'Not reachable from any direct dependency.' : chains.length === 1 && chains[0].chain.length === 1 ? 'You install this directly.' : `Installed through ${chains.length} path${chains.length > 1 ? 's' : ''}:`}</div>
+        ${chains.length && !(chains.length === 1 && chains[0].chain.length === 1) ? `<ol>${chains.slice(0, 6).map((c) => `<li><span class="chain">${c.chain.map((k) => `<code>${esc(k)}</code>`).join('<span>›</span>')}</span>${c.dev ? ' <span class="tag">dev</span>' : ''}</li>`).join('')}</ol>${chains.length > 6 ? `<div class="hint">+ ${chains.length - 6} more paths</div>` : ''}` : ''}
+      </div>`);
+    }
+  }
+  return out.length ? out.join('') : `<div class="empty">No installed package matches “${esc(q)}”.</div>`;
+}
+
+function renderTree() {
+  prepTree();
+  const r = state.report;
+  if (!r.tree.length) {
+    $('#tab-tree').innerHTML = '<div class="empty">No lockfile was found, so there is no dependency tree.</div>';
+    return;
+  }
+  const allVuln = [...tree.vuln.keys()];
+  const devOnly = allVuln.filter((k) => !tree.vuln.get(k).prod).length;
+  let body;
+  if (tree.q) body = whyInstalled(tree.q.toLowerCase());
+  else {
+    body = tree.graphs.map((g) => {
+      const cmp = byDanger(g);
+      const roots = [...g.roots].sort((a, b) => cmp(a.key, b.key));
+      const shown = tree.mode === 'vuln' ? roots.filter((rt) => g.below(rt.key).size) : roots;
+      const hidden = roots.length - shown.length;
+      return `<div class="tv-file">${esc(g.lockfile)}</div>
+        <ul class="tv">${shown.map((rt) => nodeHtml(g, rt.key, [], { root: rt })).join('')}</ul>
+        ${hidden ? `<p class="hint">${hidden} direct ${hidden === 1 ? 'dependency has' : 'dependencies have'} no known issues — switch to “Full tree” to see ${hidden === 1 ? 'it' : 'them'}.</p>` : ''}`;
+    }).join('');
+  }
+  const dirty = tree.graphs.reduce((n, g) => n + g.roots.filter((rt) => g.below(rt.key).size).length, 0);
+  const total = tree.graphs.reduce((n, g) => n + g.roots.length, 0);
+  $('#tab-tree').innerHTML = `
+    <div class="tv-head">
+      <div class="seg" id="tvmode" role="group" aria-label="Tree mode">
+        <button data-v="vuln" class="${tree.mode === 'vuln' ? 'on' : ''}">Only vulnerable paths</button><button data-v="all" class="${tree.mode === 'all' ? 'on' : ''}">Full tree</button>
+      </div>
+      <input type="search" id="tvq" placeholder="Why is a package installed? Type its name…" value="${esc(tree.q)}">
+    </div>
+    <p class="tv-sum"><b>${dirty} of ${total}</b> direct dependencies bring in vulnerable code · <b>${allVuln.length}</b> vulnerable package${allVuln.length === 1 ? '' : 's'} installed${devOnly ? ` (${devOnly} only through dev tools)` : ''}. Expand a dependency to see the path to each problem.</p>
+    ${body}`;
+
+  document.querySelectorAll('#tvmode button').forEach((b) => (b.onclick = () => { tree.mode = b.dataset.v; renderTree(); }));
+  const q = $('#tvq');
+  let t;
+  q.oninput = () => { clearTimeout(t); t = setTimeout(() => { tree.q = q.value.trim(); renderTree(); const n = $('#tvq'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 200); };
+  // Open the first vulnerable dependency so the tree is visible straight away.
+  const first = document.querySelector('#tab-tree .tv-root');
+  if (first && !tree.q && tree.mode === 'vuln') toggleNode(first, true);
+}
+
+// One delegated handler for expand buttons and "How to fix" links (works for lazily added nodes).
+$('#tab-tree').addEventListener('click', (e) => {
+  const tog = e.target.closest('.tv-tog');
+  if (tog) return toggleNode(tog.closest('li'));
+  const fix = e.target.closest('[data-fixjump]');
+  if (fix) {
+    e.preventDefault();
+    document.querySelector('.tabs [data-tab=fix]').click();
+    jump(fix.dataset.fixjump);
+  }
+});
 
 function seg(id, key) {
   document.querySelectorAll(`#${id} button`).forEach((b) => (b.onclick = () => {
     document.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle('on', x === b));
-    state[key] = b.dataset.v; state.shown = 150; render();
+    state[key] = b.dataset.v; state.shown = PAGE; render();
   }));
 }
 seg('sort', 'sort');
 seg('kind', 'kind');
-$('#exposure').onchange = (e) => { state.exposure = e.target.value; render(); };
-$('#hideDev').onchange = (e) => { state.hideDev = e.target.checked; render(); };
+$('#exposure').onchange = (e) => { state.exposure = e.target.value; state.shown = PAGE; render(); };
+$('#hideDev').onchange = (e) => { state.hideDev = e.target.checked; state.shown = PAGE; render(); };
 let qTimer;
-$('#q').oninput = (e) => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value; state.shown = 150; render(); }, 150); };
+$('#q').oninput = (e) => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value; state.shown = PAGE; render(); }, 150); };
 document.querySelectorAll('.tabs button').forEach((b) => (b.onclick = () => {
   document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
-  $('#tab-findings').hidden = b.dataset.tab !== 'findings';
-  $('#tab-tree').hidden = b.dataset.tab !== 'tree';
-  if (b.dataset.tab === 'tree') renderTree();
+  const tab = b.dataset.tab;
+  $('#tab-findings').hidden = tab === 'tree';
+  $('#tab-tree').hidden = tab !== 'tree';
+  if (tab === 'tree') renderTree();
+  else { state.view = tab; state.shown = PAGE; render(); }
 }));
 $('#rescan').onclick = async () => {
   const b = $('#rescan');
@@ -388,7 +970,11 @@ $('#rescan').onclick = async () => {
   finally { b.disabled = false; b.textContent = 'Rescan'; }
 };
 
-api('/api/report').then((r) => { state.report = r; render(); if (location.hash === '#tree') document.querySelector('[data-tab=tree]').click(); }).catch((e) => { $('#list').innerHTML = `<div class="empty">Could not load report: ${esc(e.message)}</div>`; });
+api('/api/report').then((r) => {
+  state.report = r;
+  render();
+  if (location.hash === '#tree') document.querySelector('[data-tab=tree]').click();
+}).catch((e) => { $('#list').innerHTML = `<div class="empty">Could not load report: ${esc(e.message)}</div>`; });
 </script>
 </body>
 </html>

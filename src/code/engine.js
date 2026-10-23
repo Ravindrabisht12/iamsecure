@@ -8,6 +8,7 @@ const ASSIGN = {
   py: /^\s*([\w, ]+?)\s*=\s*([^\n]+)/gm,
 };
 
+const clip = (s, n) => (s.length > n ? s.slice(0, n - 1) + '…' : s);
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /**
@@ -99,7 +100,7 @@ export function scanFile(rel, text, fileContext) {
         confidence: isTainted ? 'high' : rule.when === 'always' ? 'medium' : 'low',
         tainted: isTainted,
         context: rule.context ?? fileContext,
-        location: { file: rel, line: i + 1, snippet: raw[i].trim().slice(0, 200) },
+        location: { file: rel, line: i + 1, snippet: clip(raw[i].trim(), 240) },
         fix: rule.fix,
       });
     }

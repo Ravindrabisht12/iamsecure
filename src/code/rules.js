@@ -393,6 +393,7 @@ const PHP = [
     id: 'php-path-traversal',
     title: 'File access with a user-controlled path',
     sink: /\b(file_get_contents|fopen|readfile|file|unlink|file_put_contents|move_uploaded_file)\s*\(/,
+    exclude: /\[\s*['"]tmp_name['"]\s*\]|is_uploaded_file/, // PHP chooses tmp_name, not the user
     when: 'tainted',
     sev: 8.1,
     category: 'path',
@@ -404,6 +405,7 @@ const PHP = [
     title: 'Request to a user-controlled URL',
     sink: /\b(curl_init|curl_setopt|file_get_contents|fopen)\s*\(/,
     lineHint: /CURLOPT_URL|https?:|\$url|\$_(GET|POST|REQUEST)/i,
+    exclude: /\[\s*['"]tmp_name['"]\s*\]|is_uploaded_file/, // PHP chooses tmp_name, not the user
     when: 'tainted',
     sev: 8.6,
     category: 'ssrf',
