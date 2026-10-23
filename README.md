@@ -1,13 +1,60 @@
 # iamsecure
 
-Find vulnerable dependencies and insecure code in your project, then rank them in two ways:
+[![npm version](https://img.shields.io/npm/v/iamsecure?color=d93a2b&label=npm)](https://www.npmjs.com/package/iamsecure)
+[![license: MIT](https://img.shields.io/badge/license-MIT-2f7fd8)](https://github.com/Ravindrabisht12/iamsecure/blob/main/LICENSE)
+![zero dependencies](https://img.shields.io/badge/dependencies-0-12a03b)
+![node >= 18](https://img.shields.io/badge/node-%E2%89%A518-339933)
+
+**Find vulnerable dependencies and insecure code, ranked by how dangerous they are in *your* app, not just by CVSS.**
+
+```bash
+npx iamsecure        # scan the current folder
+npx iamsecure --ui   # open the dashboard
+```
+
+<p align="center">
+  <img src="docs/images/terminal.png" alt="iamsecure terminal report" width="680">
+</p>
+
+Every finding is ranked in two ways:
 
 - **Real risk (worst first)** is the default. It shows how dangerous each issue is for *this* codebase.
 - **Severity (high → low)** is the raw CVSS / rule severity, the same thing `npm audit` shows.
 
-The two rankings differ a lot in practice. On a deliberately vulnerable Next.js app, 51 issues are "high" by severity but only 27 are high by real risk. A 9.8 CVE in a dev-only CLI tool drops to *low*. An 8.1 lodash advisory rises to *critical* because your API route calls the exact `_.template` function the advisory names.
+The two rankings differ a lot in practice. A 9.8 CVE in a dev-only CLI tool drops to *low*. An 8.1 lodash advisory rises to *critical* because your API route calls the exact `_.template` function the advisory names.
 
 It has **zero runtime dependencies** and needs only Node ≥ 18. A security scanner shouldn't add 300 packages to your supply chain.
+
+### Example: OWASP Juice Shop
+
+A scan of [OWASP Juice Shop](https://github.com/juice-shop/juice-shop), a deliberately vulnerable Node.js app:
+
+| | critical | high | medium | low |
+|---|---|---|---|---|
+| By raw severity | 16 | 51 | 44 | 2 |
+| **By real risk** | **16** | **40** | **44** | **13** |
+
+It covered 1,181 packages and 377 source files in about 5 seconds, and found the app's planted SQL injection in `routes/login.ts`, its `eval`, its path traversal routes and 11 hard-coded secrets.
+
+Twelve "high" findings dropped to medium or low:
+- Nine are in `tar`, which is installed but never imported anywhere.
+- The rest are in a dev-only build tool and a test file.
+
+One "high" `jsonwebtoken` advisory rose to *critical*, because the server's auth code imports that package.
+
+## Dashboard
+
+`npx iamsecure --ui` opens a local dashboard. Its **Fix list** groups every issue into one action, explains it in plain language (what's wrong, what could happen, where it runs, how to fix) and gives the exact install command.
+
+<p align="center">
+  <img src="docs/images/dashboard.png" alt="iamsecure dashboard: fix list" width="820">
+</p>
+
+The **Dependency tree** shows which of your direct dependencies brings in each vulnerable package. Its search answers "why is this installed?".
+
+<p align="center">
+  <img src="docs/images/dependency-tree.png" alt="iamsecure dependency tree" width="820">
+</p>
 
 ## Quick start
 

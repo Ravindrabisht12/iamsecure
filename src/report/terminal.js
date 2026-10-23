@@ -1,3 +1,4 @@
+import os from 'node:os';
 import { sortFindings } from '../scan.js';
 
 const useColor = (process.stdout.isTTY || !!process.env.FORCE_COLOR) && !process.env.NO_COLOR;
@@ -209,7 +210,9 @@ export function printReport(report, { sort = 'risk', limit = 30, min } = {}) {
   out.push(c.gray('━'.repeat(width)));
   const fw = report.project.framework;
   const brand = `  ${c.bold('iamsecure')} ${c.gray('v' + report.tool.version)}`;
-  const where = c.gray(ellipsisStart(report.project.root, Math.max(10, width - 30)));
+  const home = os.homedir();
+  const shown = report.project.root.startsWith(home) ? '~' + report.project.root.slice(home.length) : report.project.root;
+  const where = c.gray(ellipsisStart(shown, Math.max(10, width - 30)));
   out.push(brand + ' '.repeat(Math.max(2, width - vlen(brand) - vlen(where) - 2)) + where);
   out.push(c.gray('━'.repeat(width)));
   out.push('');

@@ -43,9 +43,20 @@ export function taintedNames(code, lang) {
   return names;
 }
 
+/**
+ * The sink and its arguments: up to the `)` that closes the call (works without semicolons),
+ * or to the end of the line for sinks that aren't calls (`el.innerHTML = …`, `echo …`).
+ */
 function argsAfter(window, idx) {
-  // Text from the sink onwards, roughly up to the end of the call/statement.
-  return window.slice(idx).split(/;\s*(\n|$)/)[0];
+  const open = window.indexOf('(', idx);
+  const lineEnd = window.indexOf('\n', idx);
+  if (open === -1 || (lineEnd !== -1 && open > lineEnd)) return window.slice(idx, lineEnd === -1 ? undefined : lineEnd);
+  let depth = 0;
+  for (let i = open; i < window.length; i++) {
+    if (window[i] === '(') depth++;
+    else if (window[i] === ')' && --depth === 0) return window.slice(idx, i + 1);
+  }
+  return window.slice(idx);
 }
 
 const DYNAMIC = /\$\{|['"`]\s*\+|\+\s*['"`\w$]|\(\s*[\w$.[\]]+\s*[,)]|\(\s*\w+\s*\(|=\s*[\w$.[\]()]+\s*;?\s*$|\$\w+|\bf['"]|%\s*\(|\.format\(/;
