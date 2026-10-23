@@ -34,6 +34,8 @@ export function buildPrompt(f, report) {
     title: f.title,
     framework: report.project.framework,
     whereItRuns: f.exposure?.label,
+    attackSurface: report.reachability?.surface,
+    moduleReachability: f.reachability,
     scannerSeverity: f.severityScore,
     scannerRisk: f.riskScore,
     scannerReasons: f.reasons,
@@ -82,7 +84,7 @@ export function buildPrompt(f, report) {
   }
 
   parts.push(`Question: is this finding actually exploitable in this codebase, as deployed in production?
-Consider: can an attacker reach it (network-facing route, user input), does the vulnerable code path get used, is input validated or sanitised first, does it only run in the browser or at build time, and what an attacker gains.
+Consider: can an attacker reach it (network-facing route, user input — attackSurface says whether the app listens on the network at all), does the vulnerable code path get used (moduleReachability is traced from the real import graph: "not-loaded" means the package is never loaded, "feature-unused" means it is loaded but the named feature is never used), is input validated or sanitised first, does it only run in the browser or at build time, and what an attacker gains.
 
 Respond with ONLY a JSON object, no markdown:
 {"verdict": "exploitable" | "likely" | "unlikely" | "not_exploitable",

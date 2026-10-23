@@ -29,8 +29,11 @@ const TONE = {
   muted: c.gray,
 };
 const dot = (tone) => TONE[tone]('●');
-const EXPOSURE_TONE = { server: 'critical', universal: 'critical', client: 'medium', build: 'low', unused: 'muted', unknown: 'muted' };
-const EXPOSURE_WORD = { server: 'server', universal: 'server + browser', client: 'browser only', build: 'build/test only', unused: 'not imported', unknown: 'unknown' };
+const EXPOSURE_TONE = { server: 'critical', universal: 'critical', local: 'medium', client: 'medium', build: 'low', unused: 'muted', unknown: 'muted' };
+const EXPOSURE_WORD = { server: 'server', universal: 'server + browser', local: 'local process', client: 'browser only', build: 'build/test only', unused: 'not imported', unknown: 'unknown' };
+const REACH_TONE = { loaded: 'critical', 'feature-unused': 'medium', 'not-loaded': 'low', unknown: 'muted' };
+const REACH_WORD = { loaded: 'loaded', 'feature-unused': 'loaded, feature unused', 'not-loaded': 'never loaded', unknown: 'unknown' };
+const SURFACE_WORD = { network: 'accepts network connections', local: 'local process, no network listener', unknown: 'unknown (no entry point found)' };
 const KIND_WORD = { dependency: 'Dependency', code: 'Code', secret: 'Secret' };
 
 // ── layout helpers (ANSI-aware) ──────────────────────────────────────────────
@@ -136,8 +139,14 @@ function latestPanel(report, width) {
     (report.stats.files != null ? ` and ${report.stats.files} source files` : '') +
     `. Found ${s.total} issue${s.total === 1 ? '' : 's'}: ${kinds.dependency.length} in dependencies, ${kinds.code.length} in your code, ${kinds.secret.length} secret${kinds.secret.length === 1 ? '' : 's'}.` +
     (s.total ? ` After weighing where each one runs, ${s.byRisk.critical} ${s.byRisk.critical === 1 ? 'is' : 'are'} critical here (raw severity says ${s.bySeverity.critical}).` : '');
+  const surface = report.reachability?.surface;
+  const notLoaded = kinds.dependency.filter((f) => f.reachability?.status === 'not-loaded').length;
+  const reach = [];
+  if (surface && report.stats.files != null) reach.push(`Attack surface: ${SURFACE_WORD[surface.kind]}${surface.evidence[0] ? ` (${surface.evidence[0]})` : ''}.`);
+  if (report.reachability?.modules) reach.push(`${notLoaded} of ${kinds.dependency.length} dependency issues are in packages your code never loads.`);
   const right = [
     ...wrap(prose, rightW),
+    ...(reach.length ? wrap(reach.join(' '), rightW).map(c.gray) : []),
     '',
     groupLine('Dependencies', kinds.dependency),
     groupLine('Your code', kinds.code),
@@ -165,6 +174,7 @@ function findingEntry(f, sort, width) {
     `  ${c.gray('Risk')} ${dot(f.risk)} ${c.bold(f.riskScore.toFixed(1))}   ${c.gray('Sev')} ${dot(f.severity)} ${f.severityScore.toFixed(1)}`,
     `  ${c.gray('Runs')} ${dot(EXPOSURE_TONE[ctx])} ${EXPOSURE_WORD[ctx]}`,
   ];
+  if (f.reachability) left.push(`  ${c.gray('Reach')} ${dot(REACH_TONE[f.reachability.status])} ${REACH_WORD[f.reachability.status]}`);
   const tags = [];
   if (f.kind === 'dependency') {
     tags.push(f.package.direct ? 'direct' : 'transitive');

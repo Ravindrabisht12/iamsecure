@@ -2,26 +2,35 @@
 //
 //   risk = severity × exposure(where it runs, what kind of bug) × attack-vector × exploit-intel × reachability
 //
+// Reachability has three levels, strongest evidence first:
+//   1. module  — is the vulnerable package ever loaded from your code? (real import graph through node_modules)
+//   2. feature — is it loaded but only dangerous when you use one feature you don't use? (reach/triggers.js)
+//   3. symbol  — does your code call the function the advisory names? (direct dependencies)
+//
 // Every multiplier that fires adds a human-readable reason, so the ranking is explainable.
 
 import { levelFromScore } from '../deps/cvss.js';
 import { CONTEXT_LABEL, mergeContexts, frameworkRuntime } from '../code/context.js';
+import { featureUse } from '../reach/triggers.js';
 
-const DEFAULT_WEIGHTS = { server: 1, universal: 1, client: 0.6, build: 0.3, unused: 0.5, unknown: 0.85 };
+// `local` = server-side code with no network listener (CLI, stdio MCP server): only the user who runs it can feed it input.
+const DEFAULT_WEIGHTS = { server: 1, universal: 1, local: 0.6, client: 0.6, build: 0.3, unused: 0.5, unknown: 0.85 };
+const NOT_LOADED = 0.3;
+const FEATURE_UNUSED = 0.5;
 
 /** Vulnerability classes. `client` = how much the bug still matters when the code only runs in a browser. */
 export const VULN_CLASSES = [
-  { id: 'malicious', name: 'malicious code', cwes: [], re: /malicious (code|package)/i, weights: { client: 1, build: 1, unused: 1 } },
-  { id: 'secret', name: 'leaked secret', clientNote: 'anything in client code ships to every visitor', cwes: ['CWE-798'], re: null, weights: { client: 1, server: 0.9, build: 0.8, unknown: 0.9 } },
-  { id: 'rce', name: 'code execution', clientNote: 'code runs in the visitor\'s browser sandbox, not on your server', cwes: ['CWE-94', 'CWE-95', 'CWE-77', 'CWE-78', 'CWE-502', 'CWE-1336'], re: /remote code execution|command injection|code injection|\brce\b|arbitrary code|template injection/i, weights: { client: 0.5 } },
-  { id: 'sqli', name: 'SQL injection', clientNote: 'the browser has no direct database access', cwes: ['CWE-89', 'CWE-943'], re: /sql injection|nosql injection/i, weights: { client: 0.3 } },
-  { id: 'auth', name: 'auth bypass', clientNote: 'your server must enforce auth anyway', cwes: ['CWE-285', 'CWE-287', 'CWE-288', 'CWE-290', 'CWE-306', 'CWE-347', 'CWE-863', 'CWE-639', 'CWE-1390'], re: /authori[sz]ation bypass|authentication bypass|auth bypass|signature (verification|bypass)|forge/i, weights: { client: 0.4 } },
-  { id: 'ssrf', name: 'SSRF', clientNote: 'browser requests can\'t reach your internal network', cwes: ['CWE-918'], re: /\bssrf\b|server-side request forgery/i, weights: { client: 0.25 } },
-  { id: 'path', name: 'path traversal', clientNote: 'the browser has no access to your server\'s filesystem', cwes: ['CWE-22', 'CWE-23', 'CWE-24', 'CWE-73'], re: /path traversal|directory traversal|arbitrary file (read|write)/i, weights: { client: 0.25 } },
-  { id: 'xss', name: 'XSS', clientNote: 'XSS targets exactly this environment', cwes: ['CWE-79', 'CWE-80', 'CWE-116'], re: /cross[- ]site scripting|\bxss\b|html injection/i, weights: { client: 0.95 } },
+  { id: 'malicious', name: 'malicious code', cwes: [], re: /malicious (code|package)/i, weights: { client: 1, build: 1, unused: 1, local: 1 } },
+  { id: 'secret', name: 'leaked secret', clientNote: 'anything in client code ships to every visitor', cwes: ['CWE-798'], re: null, weights: { client: 1, server: 0.9, local: 0.9, build: 0.8, unknown: 0.9 } },
+  { id: 'rce', name: 'code execution', clientNote: 'code runs in the visitor\'s browser sandbox, not on your server', cwes: ['CWE-94', 'CWE-95', 'CWE-77', 'CWE-78', 'CWE-502', 'CWE-1336'], re: /remote code execution|command injection|code injection|\brce\b|arbitrary code|template injection/i, weights: { client: 0.5, local: 0.7 } },
+  { id: 'sqli', name: 'SQL injection', clientNote: 'the browser has no direct database access', cwes: ['CWE-89', 'CWE-943'], re: /sql injection|nosql injection/i, weights: { client: 0.3, local: 0.5 } },
+  { id: 'auth', name: 'auth bypass', clientNote: 'your server must enforce auth anyway', cwes: ['CWE-285', 'CWE-287', 'CWE-288', 'CWE-290', 'CWE-306', 'CWE-347', 'CWE-863', 'CWE-639', 'CWE-1390'], re: /authori[sz]ation bypass|authentication bypass|auth bypass|signature (verification|bypass)|forge/i, weights: { client: 0.4, local: 0.4 } },
+  { id: 'ssrf', name: 'SSRF', clientNote: 'browser requests can\'t reach your internal network', cwes: ['CWE-918'], re: /\bssrf\b|server-side request forgery/i, weights: { client: 0.25, local: 0.5 } },
+  { id: 'path', name: 'path traversal', clientNote: 'the browser has no access to your server\'s filesystem', cwes: ['CWE-22', 'CWE-23', 'CWE-24', 'CWE-73'], re: /path traversal|directory traversal|arbitrary file (read|write)/i, weights: { client: 0.25, local: 0.6 } },
+  { id: 'xss', name: 'XSS', clientNote: 'XSS targets exactly this environment', cwes: ['CWE-79', 'CWE-80', 'CWE-116'], re: /cross[- ]site scripting|\bxss\b|html injection/i, weights: { client: 0.95, local: 0.4 } },
   { id: 'proto', name: 'prototype pollution', clientNote: 'can still be chained into client-side XSS', cwes: ['CWE-1321', 'CWE-915'], re: /prototype pollution/i, weights: { client: 0.65 } },
-  { id: 'redirect', name: 'open redirect', clientNote: 'still usable for phishing', cwes: ['CWE-601'], re: /open redirect/i, weights: { client: 0.7 } },
-  { id: 'dos', name: 'denial of service', clientNote: 'an attacker can only freeze their own tab', cwes: ['CWE-400', 'CWE-1333', 'CWE-770', 'CWE-674', 'CWE-835', 'CWE-407', 'CWE-776', 'CWE-1050', 'CWE-834'], re: /denial[- ]of[- ]service|\bdos\b|redos|regular expression|backtracking|resource exhaustion|uncontrolled resource|infinite loop|memory exhaustion/i, weights: { client: 0.2 } },
+  { id: 'redirect', name: 'open redirect', clientNote: 'still usable for phishing', cwes: ['CWE-601'], re: /open redirect/i, weights: { client: 0.7, local: 0.3 } },
+  { id: 'dos', name: 'denial of service', clientNote: 'an attacker can only freeze their own tab', cwes: ['CWE-400', 'CWE-1333', 'CWE-770', 'CWE-674', 'CWE-835', 'CWE-407', 'CWE-776', 'CWE-1050', 'CWE-834'], re: /denial[- ]of[- ]service|\bdos\b|redos|regular expression|backtracking|resource exhaustion|uncontrolled resource|infinite loop|memory exhaustion/i, weights: { client: 0.2, local: 0.35 } },
   { id: 'leak', name: 'information leak', clientNote: 'only data already sent to the browser is at risk', cwes: ['CWE-200', 'CWE-201', 'CWE-209', 'CWE-359', 'CWE-522', 'CWE-532', 'CWE-312'], re: /credential leak|information (disclosure|exposure)|exposure of sensitive|leaks?\b/i, weights: { client: 0.5 } },
   { id: 'crypto', name: 'weak crypto', clientNote: 'client-side crypto is rarely security-critical', cwes: ['CWE-327', 'CWE-328', 'CWE-330', 'CWE-338', 'CWE-326'], re: /weak (crypto|hash|random)|insecure random|predictable/i, weights: { client: 0.5 } },
 ];
@@ -108,9 +117,10 @@ const round1 = (x) => Math.round(x * 10) / 10;
 /**
  * Compute riskScore/risk/exposure/reasons on every finding (mutates).
  * @param {any[]} findings
- * @param {{src: ReturnType<import('../code/index.js').analyzeSource>|null, framework: string, exploit?: {kev:Map<string,any>, epss:Map<string,any>}}} ctx
+ * @param {{src: ReturnType<import('../code/index.js').analyzeSource>|null, framework: string, exploit?: {kev:Map<string,any>, epss:Map<string,any>},
+ *   surface?: ReturnType<import('../reach/surface.js').detectSurface>, modules?: ReturnType<import('../reach/modules.js').walkModules>}} ctx
  */
-export function scoreFindings(findings, { src, framework, exploit }) {
+export function scoreFindings(findings, { src, framework, exploit, surface, modules }) {
   const runtime = frameworkRuntime(framework);
   for (const f of findings) {
     const reasons = [];
@@ -129,12 +139,17 @@ export function scoreFindings(findings, { src, framework, exploit }) {
       f.kind === 'dependency'
         ? dependencyExposure(f, src, runtime)
         : { context: f.context ?? src?.contexts.get(f.location?.file) ?? 'unknown', evidence: [] };
+    // Server-side code in an app that never opens a port: only the local user can feed it input.
+    if (surface?.kind === 'local' && (exp.context === 'server' || exp.context === 'universal')) exp.context = 'local';
     const weight = { ...DEFAULT_WEIGHTS, ...cls.weights }[exp.context] ?? 1;
     f.exposure = { context: exp.context, label: CONTEXT_LABEL[exp.context], evidence: exp.evidence };
     s *= weight;
-    const why = weight < 1 || exp.context === 'client' ? exposureReason(exp.context, cls, f) : null;
+    const why = weight < 1 || exp.context === 'client' ? exposureReason(exp.context, cls, f, surface) : null;
     if (why) reasons.push(why);
-    else if (f.kind === 'dependency' && exp.evidence.length) reasons.push(`Runs on the server — ${exp.evidence[0]}`);
+    else if (f.kind === 'dependency' && exp.evidence.length) {
+      const net = surface?.kind === 'network' ? ` — and the app accepts network connections (${surface.evidence[0]})` : '';
+      reasons.push(`Runs on the server — ${exp.evidence[0]}${net}`);
+    }
 
     // 2. Attack vector (CVSS)
     const m = adv?.cvss?.metrics;
@@ -168,8 +183,33 @@ export function scoreFindings(findings, { src, framework, exploit }) {
       }
     }
 
-    // 4. Reachability: does our code call the function the advisory names?
-    if (f.kind === 'dependency' && src && f.package.direct && !adv.malicious) {
+    // 4. Module + feature reachability: is the package ever loaded, and is the vulnerable feature used?
+    if (f.kind === 'dependency' && modules?.available && f.package.ecosystem === 'npm' && !adv.malicious && !['build', 'unused'].includes(exp.context)) {
+      const key = `${f.package.name}@${f.package.version}`;
+      const hit = modules.loaded.get(key);
+      if (hit) {
+        const use = featureUse(f.package.name, src);
+        const chain = hit.chain.join(' → ');
+        if (use && !use.used) {
+          s *= FEATURE_UNUSED;
+          f.reachability = { status: 'feature-unused', chain: hit.chain, feature: use.feature };
+          reasons.push(`Loaded at runtime (${chain}), but your code never uses ${use.feature} — the code path this bug is in`);
+        } else {
+          f.reachability = { status: 'loaded', chain: hit.chain, ...(use && { feature: use.feature, where: use.where }) };
+          reasons.push(`Loaded at runtime: ${chain}${use ? ` — and your code uses ${use.feature} (${use.where})` : ''}`);
+        }
+      } else if (!modules.installed.has(key)) {
+        f.reachability = { status: 'unknown' };
+        reasons.push(`Can't check whether it's loaded: ${key} isn't in node_modules (out of sync with ${f.package.lockfile}? run a clean install)`);
+      } else if (!modules.truncated) {
+        s *= NOT_LOADED;
+        f.reachability = { status: 'not-loaded' };
+        reasons.push(notLoadedReason(f, src, modules));
+      }
+    }
+
+    // 5. Symbol reachability: does our code call the function the advisory names?
+    if (f.kind === 'dependency' && src && f.package.direct && !adv.malicious && f.reachability?.status !== 'not-loaded') {
       const uses = src.usage.get(f.package.name) ?? [];
       const symbols = vulnerableSymbols(adv, f.package.name);
       if (uses.length && symbols.length) {
@@ -199,8 +239,22 @@ export function scoreFindings(findings, { src, framework, exploit }) {
   return findings;
 }
 
-function exposureReason(context, cls, f) {
+/** "Never loaded" with the most specific explanation we can give: which parts of the parent you do import. */
+function notLoadedReason(f, src, modules) {
+  const roots = f.package.introducedBy.filter((r) => r !== f.package.name);
+  const specs = [...new Set(roots.flatMap((r) => (src?.usage.get(r) ?? []).filter((u) => u.context !== 'build').map((u) => u.spec)))].filter((s) => !roots.includes(s));
+  const followed = `followed ${modules.modules} modules from your code`;
+  if (!roots.length) return `Never loaded at runtime — none of your code's imports lead to it (${followed})`;
+  if (specs.length) {
+    return `Never loaded at runtime — only parts of ${roots.join(', ')} you don't import use it; you import ${specs.slice(0, 3).join(', ')}${specs.length > 3 ? ', …' : ''} (${followed})`;
+  }
+  return `Never loaded at runtime — ${roots.join(', ')} installs it, but not on any code path your app uses (${followed})`;
+}
+
+function exposureReason(context, cls, f, surface) {
   switch (context) {
+    case 'local':
+      return `No network listener found — runs as a local process (${surface.evidence[0]}), so only the person running it can send it input`;
     case 'client':
       return `Only runs in the browser — ${cls.clientNote ?? `${cls.name} impact is reduced there`}`;
     case 'build':

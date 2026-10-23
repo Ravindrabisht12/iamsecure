@@ -1,6 +1,6 @@
 {
   "name": "iamsecure",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "Scan a codebase for vulnerable dependencies and insecure code, ranked by real-world risk \u2014 with an optional AI second opinion.",
   "author": "Ravindra Bisht",
   "repository": {
